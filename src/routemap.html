@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="NONE">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="referrer" content="origin"><!-- NOTE: for Bing Maps -->
+    <title>ルート地図</title>
+  </head>
+  <body>
+    <div id="map">
+      <div id="toolbar" class="bar ol-unselectable">
+        <div>
+          <button type="button" onclick="toggle('menu')"><span class="one">≡</span></button>
+          <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
+          <button type="button" onclick="openPopupCenter()">中心点</button>
+          <span>マップ</span><select id="tb-base"></select>
+          <button type="button" class="navi" onclick="window.close()"><span class="one">✖︎</span></button>
+        </div>
+        <div id="menu">
+          <span>ズーム</span><select id="tb-zoom"></select>
+          <input type="checkbox" onchange="switchTrack(this.checked)" checked>
+          <span>GPSログ</span>
+          <button type="button" onclick="window.print()">印刷</button>
+        </div>
+      </div><!-- #toolbar -->
+      <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
+        <img src="data:image/gif;base64,R0lGODlhGAAYAPAAAICAgAAAACH5BAEAAAEAIf8LSW1hZ2VNYWdpY2sOZ2FtbWE9MC40NTQ1NDUALAAAAAAYABgAAAIxjI+puwAMk4s0zAovbm9z/4FSJ5Ym4qSpcakq67ZdrJ02WJe5uOOk2fMEN0NM8XYoAAA7" alt="">
+      </div>
+    </div><!-- #map -->
+    <script src="routemap.js"></script>
+  </body>
+</html>

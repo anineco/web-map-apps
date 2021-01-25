@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="NONE">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="referrer" content="origin"><!-- NOTE: for Bing Maps -->
+    <title>山名一覧 on the Web地図</title>
+  </head>
+  <body>
+    <div id="map">
+      <div id="toolbar" class="bar ol-unselectable">
+        <h1 onclick="location.href='home.html'">山名一覧 on the Web地図</h1>
+        <div>
+          <button type="button" onclick="toggle('menu')"><span class="one">≡</span></button>
+          <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
+          <button type="button" onclick="openPopupCenter()">中心点</button>
+          <span>マップ</span><select id="tb-base"></select>
+          <button type="button" class="navi" onclick="history.back()">戻る</button>
+        </div>
+        <div id="menu">
+          <span>ズーム</span><select id="tb-zoom"></select>
+          <input type="checkbox" onchange="switchSanmei(this.checked)" checked>
+          <span>山名</span>
+          <button type="button" onclick="location.href='credit.html'"><span class="one">&copy;</span></button>
+        </div>
+      </div><!-- #toolbar -->
+      <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
+        <img src="data:image/gif;base64,R0lGODlhGAAYAPAAAICAgAAAACH5BAEAAAEAIf8LSW1hZ2VNYWdpY2sOZ2FtbWE9MC40NTQ1NDUALAAAAAAYABgAAAIxjI+puwAMk4s0zAovbm9z/4FSJ5Ym4qSpcakq67ZdrJ02WJe5uOOk2fMEN0NM8XYoAAA7" alt="">
+      </div>
+      <div id="searchbar" class="bar ol-unselectable">
+        <div>
+          <form action="" name="form1" accept-charset="UTF-8">
+            <span>山名</span>
+            <input type="search" id="query" value="">
+            <button>検索</button>
+            <button type="button" title="result" onclick="toggle('result')"><span class="one">⋮</span></button>
+          </form>
+        </div>
+        <div id="result">
+          <span>検索結果：</span><span id="count"></span>
+          <div>
+            <table>
+              <thead>
+                <tr><th>ID</th><th>山名</th><th>標高</th></tr>
+              </thead>
+              <tbody id="items"></tbody>
+            </table>
+          </div>
+        </div><!-- #result -->
+      </div><!-- #searchbar -->
+    </div><!-- #map -->
+    <script src="mountain.js"></script>
+  </body>
+</html>

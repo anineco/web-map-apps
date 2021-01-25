@@ -1,0 +1,34 @@
+{
+  "name": "web-map-apps",
+  "version": "1.0.0",
+  "description": "Web map applications using OpenLayers",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "parcel src/*.html",
+    "prebuild": "rm -f dist/*.js dist/*.css dist/*.map",
+    "build": "parcel build --experimental-scope-hoisting --public-url . src/*.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anineco/web-map-apps.git"
+  },
+  "author": "Nyanta Anineco <anineco@nifty.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anineco/web-map-apps/issues"
+  },
+  "homepage": "https://github.com/anineco/web-map-apps#readme",
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "cssnano": "^4.1.10"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "ga-gtag": "^1.0.1",
+    "ol": "^6.5.0",
+    "ol-popup": "^4.0.0",
+    "promise-polyfill": "^8.2.0",
+    "whatwg-fetch": "^3.5.0"
+  }
+}
