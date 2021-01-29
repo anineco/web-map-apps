@@ -37,7 +37,7 @@ if ($mode == 'cat') {
 # GeoJSON出力
 #
   header('Content-type: application/geo+json; charset=UTF-8');
-  header('Cache-Control: max-age=2592000');
+  header('Cache-Control: max-age=604800');
   echo '{"type":"FeatureCollection","features":[', PHP_EOL;
   if ($val < 4) {
     # ヤマレコ
@@ -125,7 +125,7 @@ EOS;
   $sth = null;
   $output = array( 'code' => $code, 'name' => $name );
   header('Content-type: application/json; charset=UTF-8');
-  header('Cache-Control: max-age=2592000');
+  header('Cache-Control: max-age=604800');
   echo json_encode($output, JSON_UNESCAPED_UNICODE), PHP_EOL;
 } else {
 #
@@ -212,7 +212,7 @@ EOS;
     $output = array('geo' => $geo);
   }
   header('Content-type: application/json; charset=UTF-8');
-  header('Cache-Control: max-age=2592000');
+  header('Cache-Control: max-age=604800');
   echo json_encode($output, JSON_UNESCAPED_UNICODE), PHP_EOL;
 }
 $dbh = null;

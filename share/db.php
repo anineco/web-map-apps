@@ -148,7 +148,7 @@ EOS;
   }
   $sth->execute();
   header('Content-type: application/geo+json; charset=UTF-8');
-  header('Cache-Control: max-age=2592000');
+  header('Cache-Control: max-age=604800');
   echo '{"type":"FeatureCollection","features":[', PHP_EOL;
   $count = 0;
   while ($row = $sth->fetch(PDO::FETCH_OBJ)) {
@@ -230,7 +230,7 @@ EOS;
     $output = array( 'maps' => $maps );
   }
   header('Content-type: application/json; charset=UTF-8');
-  header('Cache-Control: max-age=2592000');
+  header('Cache-Control: max-age=604800');
   echo json_encode($output, JSON_UNESCAPED_UNICODE), PHP_EOL;
 } elseif ($mode != 'end') {
 #
@@ -389,7 +389,7 @@ EOS;
   }
   $output = array('geo' => $geo, 'rec' => $rec);
   header('Content-type: application/json; charset=UTF-8');
-  header('Cache-Control: max-age=2592000');
+  header('Cache-Control: max-age=604800');
   echo json_encode($output, JSON_UNESCAPED_UNICODE), PHP_EOL;
 }
 $dbh = null;
