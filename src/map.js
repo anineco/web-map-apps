@@ -329,7 +329,7 @@ function showRecords(recs) {
   }
   recs.forEach(function (rec) {
     const tr = document.createElement('tr'); // new row
-    tr.addEventListener('click', () => { location.href = rec.link; });
+    tr.addEventListener('click', () => location.assign(rec.link));
     let td = document.createElement('td'); // 1st column
     const img = document.createElement('img');
     img.setAttribute('src', rec.image || 'image/no_image.png');

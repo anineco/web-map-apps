@@ -16,13 +16,13 @@
           <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
           <button type="button" onclick="openPopupCenter()">中心点</button>
           <span>マップ</span><select id="tb-base"></select>
-          <button type="button" class="navi" onclick="location.href='.'">TOP</button>
+          <button type="button" class="navi" onclick="location.assign('.')">TOP</button>
         </div>
         <div id="menu">
           <span>ズーム</span><select id="tb-zoom"></select>
           <input type="checkbox" onchange="switchSanmei(this.checked)" checked>
           <span>山名</span>
-          <button type="button" onclick="location.href='credit.html'"><span class="one">&copy;</span></button>
+          <button type="button" onclick="location.assign('credit.html')"><span class="one">&copy;</span></button>
         </div>
       </div><!-- #toolbar -->
       <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
