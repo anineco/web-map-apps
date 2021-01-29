@@ -149,30 +149,33 @@ function styleFunction(feature) {
 
 const sanmei = [];
 
-document.querySelectorAll('input.tb-sanmei').forEach(element => {
-  const c = element.value;
-  sanmei[c] = new VectorLayer({
-    source: new VectorSource({
-      url: dburl + '?cat=' + c,
-      format: new GeoJSON()
-    }),
-    title: '山名',
-    style: styleFunction,
-    visible: element.checked
-  });
-  map.addLayer(sanmei[c]);
-  element.addEventListener('change', function () { 
-    const i = this.value;
-    const v = this.checked;
-    sanmei[i].setVisible(v);
-    if (i & 2) { // radio button
-      sanmei[i ^ 4].setVisible(!v);
-    }
-    if (popup.isOpened()) {
-      popup.hide();
-    }
-  });
-});
+Array.prototype.forEach.call(
+  document.querySelectorAll('input.tb-sanmei'),
+  function (element) {
+    const c = element.value;
+    sanmei[c] = new VectorLayer({
+      source: new VectorSource({
+        url: dburl + '?cat=' + c,
+        format: new GeoJSON()
+      }),
+      title: '山名',
+      style: styleFunction,
+      visible: element.checked
+    });
+    map.addLayer(sanmei[c]);
+    element.addEventListener('change', function () { 
+      const i = this.value;
+      const v = this.checked;
+      sanmei[i].setVisible(v);
+      if (i & 2) { // radio button
+        sanmei[i ^ 4].setVisible(!v);
+      }
+      if (popup.isOpened()) {
+        popup.hide();
+      }
+    });
+  }
+);
 
 function toolbarCreateZoom(target) {
   const element = document.getElementById(target);
