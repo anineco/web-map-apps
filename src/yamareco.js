@@ -432,7 +432,7 @@ map.on('pointermove', function (evt) {
 
 window.addEventListener('load', function (event) {
   const img = document.createElement('img');
-  img.setAttribute('src', 'lime/lime.cgi?mountain'); // access counter
+  img.setAttribute('src', 'lime/lime.cgi?yamareco'); // access counter
   img.setAttribute('width', 1);
   img.setAttribute('height', 1);
   img.style.display = 'none';
