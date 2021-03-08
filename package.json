@@ -19,8 +19,8 @@
   },
   "homepage": "https://github.com/anineco/web-map-apps#readme",
   "devDependencies": {
-    "@babel/core": "^7.12.10",
-    "@babel/preset-env": "^7.12.11",
+    "@babel/core": "^7.13.8",
+    "@babel/preset-env": "^7.13.9",
     "cssnano": "^4.1.10"
   },
   "dependencies": {
@@ -29,6 +29,6 @@
     "ol": "^6.5.0",
     "ol-popup": "^4.0.0",
     "promise-polyfill": "^8.2.0",
-    "whatwg-fetch": "^3.5.0"
+    "whatwg-fetch": "^3.6.2"
   }
 }
