@@ -12,7 +12,7 @@ use DBI;
 use DBD::mysql;
 use Time::Piece;
 
-require '/home/anineco/init.pl';
+require './init.pl';
 my $cf = set_init();
 
 my $dsn = 'DBI:mysql:database=' . $cf->{database};
