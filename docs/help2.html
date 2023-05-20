@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ヘルプとクレジット</title>
+<style>
+html {
+  overflow: auto;
+}
+#container {
+  width: 650px; /* IE6でA4に印刷する際に最適な幅 */
+  color: black;
+  margin-right: auto;
+  margin-left: auto;
+  line-height: 120%;
+  margin-bottom: 2em;
+}
+#container h2 {
+  margin: 10pt 0 5pt 0;
+  padding: 5pt;
+  background-color: #fff;
+  border-left: #bbf 10pt solid;
+  font-size: medium;
+}
+figure {
+  text-align: center;
+}
+table {
+   clear: both;
+   width: 100%;
+   border-collapse: collapse;
+}
+th {
+   background-color: #ddf;
+   border: 1px solid silver;
+   text-align: left;
+   padding: 2px;
+   white-space: nowrap;
+}
+td {
+   background-color: white;
+   border: 1px solid silver;
+   padding: 2px;
+   vertical-align: top;
+}
+@media screen and (max-width: 649px) {
+  body {
+    min-width: 0;
+  }
+  #container {
+    width: auto;
+  }
+}
+</style>
+</head>
+<body>
+<div id="container">
+<h2>このサイトについて</h2>
+<p>このサイトは、全国の20,000座を越える山の山名、よみがな、標高、緯度、経度をデータベース化し、ウェブ地図上に表示するサイトです。国土地理院2万5千分1地形図、三省堂日本山名事典改訂版に記載されている山を網羅しています。また、書籍やインターネットの情報により、随時、改訂と新しい山の登録を行っています。</p>
+<p>情報の正確性と精度には留意しておりますが、誤りがありましたら<a href="https://map.jpn.org/bbs/">サポート掲示板</a>でお知らせ下さい。未登録の山の情報や、このサイトに関するご意見・ご質問もサポート掲示板へお願いします。</p>
+<h2>ヘルプ</h2>
+<p>例として、本サイトをスマートフォンで表示した場合の画面を図1に示します。PCで表示した場合はレイアウトが変わりますが、操作方法は同様です。地図をスムーズにスクロールしたり、ズームしたり、回転させることができます。PCの場合の回転は、Shift+Altキーとマウス右ボタンを同時に押しながらマウスカーソルを動かして行います。</p>
+<p>なお、図1にある<span style="color:blue;">榛名山・掃部ヶ岳</span>のような"・"を含む山名は、<span style="color:blue;">総称・ピーク名</span>を表します。総称は原則として山域の最高峰に付記されます。</p>
+<figure>
+<img src="img/Fig01.png" srcset="img/2x/Fig01.png 2x" width="187" height="392" alt="*">
+<figcaption>図1 スマートフォンによる表示例</figcaption>
+</figure>
+<p>青字の山名または<img src="icon/952015.png" alt="山頂">のアイコンをクリックすると、その山の情報がポップアップで表示されます（図2）。ポップアップは右上の ✖︎ をクリックすると消えます。</p>
+<figure>
+<img src="img/Fig02.png" srcset="img/2x/Fig02.png 2x" width="187" height="392" alt="*">
+<figcaption>図2 ポップアップの表示</figcaption>
+</figure>
+<p>山名に別名があれば、ポップアップに表示されます（図5）。ポップアップに表示される<span style="color:blue;">所在</span>は、国土数値情報（行政区域）を利用して、<span style="color:blue;">緯度</span>と<span style="color:blue;">経度</span>から都道府県＋市区町村を逆ジオコーディングで求めたものです。ただし、行政区域の境界付近にある山の場合は、隣接する行政区域に属する／属しないの結果が、地形図から読み取れる結果と相違する場合があります。</p>
+<p><span style="color:blue;">ID</span>は、データベースによる管理のため、それぞれの山に一意に割り振られた識別番号（identification number）です。その値はデータベースへの登録順（欠番あり）で、その他の意味は特にありません。</p>
+<p>それぞれのボタンとチェックボックスの機能を、図3で付記した<span style="color:red;">丸数字</span>を用いて説明します。</p>
+<figure>
+<img src="img/Fig03.png" srcset="img/2x/Fig03.png 2x" width="187" height="392" alt="*">
+<figcaption>図3 ボタンとチェックボックスの配置</figcaption>
+</figure>
+<p><span style="color:red;">①</span> 下段のメニュー（<span style="color:red;">⑥</span>、<span style="color:red;">⑦</span>）の表示をオン／オフ。<br>
+<span style="color:red;">②</span> 十字線で示される中心位置にポップアップを表示（図4）。<br>
+<span style="color:red;">③</span> ベースマップ（標準、淡色、写真、OTM）を選択。<br>
+<span style="color:red;">④</span> ズームレベルを選択。<br>
+<span style="color:red;">⑤</span> このページを表示。<br>
+<span style="color:red;">⑥</span> 山名とアイコンの表示をオン／オフ。<br>
+<span style="color:red;">⑦</span> 中心位置の十字線の表示をオン／オフ。<br>
+<span style="color:red;">⑧</span> 検索結果の表示を一時的にオン／オフ。</p>
+<figure>
+<img src="img/Fig04.png" srcset="img/2x/Fig04.png 2x" width="187" height="392" alt="*">
+<figcaption>図4 中心位置のポップアップ</figcaption>
+</figure>
+<h2>山名検索機能</h2>
+<p>"山名"欄に文字列を入力して"検索"ボタンをクリックすると、山名検索が実行されます。検索は、山名、総称、別名に渡って実行されます。検索結果は標高の降順でソートされて表示されます。検索結果の一つをクリックすると、地図の中心位置が選択した山の位置に移動し、ポップアップを表示します（図5）。</p>
+<figure>
+<img src="img/Fig05.png" srcset="img/2x/Fig05.png 2x" width="187" height="392" alt="*">
+<figcaption>図5 検索結果とポップアップ</figcaption>
+</figure>
+<p>検索文字列には次の特殊文字を含めることができます。いずれも半角文字で入力してください。</p>
+<p><span style="color:blue;">%</span>：山名の先頭または末尾に指定し、任意の文字列を表します。例えば、"<span style="color:blue;">%猫%</span>"で検索すると、漢字の"猫"を含む山名の一覧が表示されます。なお、検索結果の件数の上限は1000で、上限を越えた分は表示されません。<br>
+<span style="color:blue;">＠</span>：山名に続いて指定し、続けて所在を記述すると、所在についての前方一致検索を行なって、検索結果を限定します。例えば、"<span style="color:blue;">%@群馬県桐生市</span>"で検索すれば、群馬県桐生市にある山の一覧が表示されます。ただし、行政区域の境界にある山は、検索結果に含まれない場合があるので注意が必要です。</p>
+<p>その他、検索文字列を数値とすると、数値に一致するIDをもつ山を検索します。特に"<span style="color:blue;">0</span>"で検索すると、最も大きなIDから100件を表示します。これはデータベースに新規に登録した山の確認に用いています。</p>
+<p><span style="color:red;">新機能</span>：検索結果に［保存］ボタンが付きました。［保存］を実行すると、検索結果をCSVファイルでダウンロードできます。CSVファイル内の緯度、経度はDMS形式（例：1392233→139°22′33″）です。</p>
+<h2>クレジット表記</h2>
+<p>この地図の作成にあたっては、国土地理院長の承認を得て、同院発行の数値地図25000
+（地名・公共施設）を使用した。
+（承認番号 平29情使、第1007号）</p>
+<p>また、使用しているタイル画像のクレジットは次の表のとおり。</p>
+<table class="base">
+<thead><tr><th>ベースマップ</th><th>クレジット</th></tr></thead>
+<tbody>
+<tr><td>標準、淡色、写真</td><td><a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a></td></tr>
+<tr><td>OTM</td><td>&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors,
+&copy; <a href="https://opentopomap.org/">OpenTopoMap</a>
+(<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)</td></tr>
+</tbody>
+</table>
+<p>その他、下記のデータ、ウェブサービス、コードを利用している。</p>
+<ul>
+<li><a href="https://nlftp.mlit.go.jp/">国土数値情報</a>（国土交通省）の行政区域データ（加工して利用）</li>
+<li><a href="https://maps.gsi.go.jp/development/elevation_s.html">地理院標高API</a></li>
+<li><a href="https://openlayers.org/">OpenLayers</a></li>
+<li><a href="https://github.com/walkermatt/ol-popup">OpenLayers Popup</a></li>
+</ul>
+<hr>
+<div id="navi"><a href="#" onclick="window.close();">閉じる</a></div>
+</div>
+</body>
+</html>

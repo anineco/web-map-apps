@@ -1,0 +1,104 @@
+@charset "UTF-8";
+@import '../node_modules/ol/ol.css';
+@import '../node_modules/ol-popup/src/ol-popup.css';
+@import 'ol-popup-custom.css';
+:root {
+  --ol-foreground-color: white;
+  --ol-subtle-foreground-color: white;
+  --ol-background-color: rgba(0,60,136,.5);
+  --ol-partial-background-color: rgba(0,60,136,.5);
+}
+body {
+  font-family: sans-serif;
+}
+#crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+#toolbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  font-size: 0.875rem;
+}
+div.bar > div {
+  padding: 2px 8px;
+  color: var(--ol-foreground-color);
+  background: var(--ol-background-color);
+}
+.bar button:last-child {
+  position: absolute;
+  right: 8px;
+}
+.bar input,
+.bar button,
+.bar select {
+  margin: 2px 4px;
+  padding: 1px 4px;
+  border: none;
+  border-radius: 4px;
+  font-family: sans-serif;
+  font-size: 0.875rem;
+  color: #000;
+  background-color: #fff;
+}
+.bar button {
+  cursor: pointer;
+}
+button.navi {
+  background-color: #fc9;
+  color: blue;
+}
+button.navi a {
+  text-decoration: none;
+}
+.one {
+  display: inline-block;
+  width: 15px;
+  text-align: center;
+  font-family: system-ui;
+}
+@media screen and (min-width: 375px) {
+  #toolbar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 320px;
+  }
+  div.bar {
+    padding: 2px;
+    border-radius: 4px;
+    background-color: rgba(255,255,255,.4);
+  }
+  div.bar > div {
+    margin: 1px;
+    border: 2px;
+    border-radius: 2px;
+  }
+}
+.ol-rotate {
+  top: 4rem !important;
+  left: .5em !important;
+  right: auto !important;
+}
+.ol-touch .ol-rotate {
+  top: 5rem;
+}
+@media screen and (max-width: 374px) {
+  .ol-zoom, .ol-rotate {
+    display: none;
+  }
+}
+@media print { /* A4横 */
+  body {
+    width: 251mm;
+    height: 172mm;
+    position: relative;
+  }
+  .ol-control, .ol-scale-line, #toolbar {
+    display: none;
+  }
+}

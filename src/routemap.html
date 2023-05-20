@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="referrer" content="origin"><!-- NOTE: for Bing Maps -->
+    <title>ルート地図</title>
+    <link rel="canonical" href="https://anineco.org/routemap.html">
+    <script type="module" src="routemap.js"></script>
+    <script nomodule src="ie11.js" defer></script>
+    <link rel="stylesheet" href="routemap.css">
+    <style>
+      html, body, #map { margin:0; padding:0; border:0; width:100%; height:100%; }
+      _:-ms-lang(x), #map { display:none; } /* IE11 */
+    </style>
+  </head>
+  <body>
+    <div id="map">
+      <div id="toolbar" class="bar ol-unselectable">
+        <div>
+          <button type="button" title="メニュー" onclick="toggle('menu')"><span class="one">≡</span></button>
+          <button type="button" title="中心座標" onclick="openPopupCenter()"><span class="one">⌖</span></button>
+          <select id="tb-base" title="マップ"></select>
+          <select id="tb-zoom" title="ズーム"></select>
+          <button type="button" onclick="window.print()">印刷</button>
+          <button type="button" class="navi" onclick="window.close()"><span class="one">✖︎</span></button>
+        </div>
+        <div id="menu" style="display:none;">
+          <input type="checkbox" onchange="switchTrack(this.checked)" checked>
+          <span>GPSログ</span>
+          <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
+          <span>中心十字</span>
+        </div>
+      </div><!-- #toolbar -->
+      <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
+        <img src="data:image/gif;base64,R0lGODlhGAAYAPAAAICAgAAAACH5BAEAAAEAIf8LSW1hZ2VNYWdpY2sOZ2FtbWE9MC40NTQ1NDUALAAAAAAYABgAAAIxjI+puwAMk4s0zAovbm9z/4FSJ5Ym4qSpcakq67ZdrJ02WJe5uOOk2fMEN0NM8XYoAAA7" width="24" height="24" alt="">
+      </div>
+    </div><!-- #map -->
+  </body>
+</html>

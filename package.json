@@ -1,0 +1,37 @@
+{
+  "name": "web-map-apps",
+  "version": "1.0.0",
+  "description": "Web map applications using OpenLayers",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint 'src/*.js'",
+    "start": "parcel --no-source-maps 'src/*.html'",
+    "prebuild": "rm -f dist/*.*.*",
+    "build": "parcel build --no-source-maps --public-url . 'src/*.html'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anineco/web-map-apps.git"
+  },
+  "author": "Nyanta Anineco <anineco@nifty.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/anineco/web-map-apps/issues"
+  },
+  "homepage": "https://github.com/anineco/web-map-apps#readme",
+  "devDependencies": {
+    "cssnano": "^6.0.1",
+    "eslint": "^8.41.0",
+    "is-svg": ">=5.0.0",
+    "parcel": "^2.8.3"
+  },
+  "dependencies": {
+    "ga-gtag": "^1.1.7",
+    "ol": "^7.3.0",
+    "ol-popup": "^5.0.0"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11"
+  ]
+}

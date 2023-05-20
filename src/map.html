@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="referrer" content="origin"><!-- NOTE: for Bing Maps -->
+    <title>地図から選択</title>
+    <link rel="canonical" href="https://anineco.org/map.html">
+    <script type="module" src="map.js"></script>
+    <script nomodule src="ie11.js" defer></script>
+    <link rel="stylesheet" href="map.css">
+    <style>
+      html, body, #map { margin:0; padding:0; border:0; width:100%; height:100%; }
+      _:-ms-lang(x), #map { display:none; } /* IE11 */
+    </style>
+  </head>
+  <body>
+    <div id="map">
+      <div id="toolbar" class="bar ol-unselectable">
+        <h1>地図から選択 —
+          <select id="tb-category" title="カテゴリ" onchange="location.replace('map.html?cat='+value);">
+            <option value="0">全山行記録</option>
+            <option value="1">日本三百名山</option>
+            <option value="2">ぐんま百名山</option>
+            <option value="11">群馬300山</option>
+            <option value="3">栃木百名山</option>
+            <option value="8">埼玉百山</option>
+            <option value="5">信州百名山</option>
+            <option value="6">山梨百名山</option>
+            <option value="7">うつくしま百名山</option>
+            <option value="10">越後百山</option>
+            <option value="4">桐生地域百山</option>
+            <option value="9">足利百名山</option>
+          </select>
+        </h1>
+        <div>
+          <button type="button" title="メニュー" onclick="toggle('menu')"><span class="one">≡</span></button>
+          <button type="button" title="中心座標" onclick="openPopupCenter()"><span class="one">⌖</span></button>
+          <select id="tb-base" title="マップ"></select>
+          <select id="tb-zoom" title="ズーム"></select>
+          <button type="button" title="ヘルプとクレジット" onclick="window.open('help.html')"><span class="one">ⓘ</span></button>
+          <button type="button" class="navi" onclick="location.assign('.')">TOP</button>
+        </div>
+        <div id="menu" style="display:none;">
+          <input type="checkbox" onchange="switchSanmei(this.checked)" checked>
+          <span>山名</span>
+          <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
+          <span>中心十字</span>
+        </div>
+      </div><!-- #toolbar -->
+      <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
+        <img src="data:image/gif;base64,R0lGODlhGAAYAPAAAICAgAAAACH5BAEAAAEAIf8LSW1hZ2VNYWdpY2sOZ2FtbWE9MC40NTQ1NDUALAAAAAAYABgAAAIxjI+puwAMk4s0zAovbm9z/4FSJ5Ym4qSpcakq67ZdrJ02WJe5uOOk2fMEN0NM8XYoAAA7" width="24" height="24" alt="">
+      </div>
+      <div id="searchbar" class="bar ol-unselectable">
+        <div style="height:28px;">
+          <span>山行記録</span>
+          <button type="button" title="表示／非表示" onclick="toggle('result')"><span class="one">⋮</span></button>
+        </div>
+        <div id="result" style="display:none;">
+          <div>
+            <table>
+              <tbody id="items"></tbody>
+            </table>
+          </div>
+        </div><!-- #result -->
+      </div><!-- #searchbar -->
+    </div><!-- #map -->
+  </body>
+</html>

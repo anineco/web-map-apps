@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta name="referrer" content="origin"><!-- NOTE: for Bing Maps -->
+    <title>山名一覧 on the Web地図</title>
+    <link rel="canonical" href="https://map.jpn.org/mountain.html">
+    <script type="module" src="mountain.js"></script>
+    <script nomodule src="ie11.js" defer></script>
+    <link rel="stylesheet" href="mountain.css">
+    <style>
+      html, body, #map { margin:0; padding:0; border:0; width:100%; height:100%; }
+      _:-ms-lang(x), #map { display:none; } /* IE11 */
+    </style>
+  </head>
+  <body>
+    <div id="map">
+      <div id="toolbar" class="bar ol-unselectable">
+        <h1>山名一覧 on the Web地図</h1>
+        <div>
+          <button type="button" title="メニュー" onclick="toggle('menu')"><span class="one">≡</span></button>
+          <button type="button" title="中心座標" onclick="openPopupCenter()"><span class="one">⌖</span></button>
+          <select id="tb-base" title="マップ"></select>
+          <select id="tb-zoom" title="ズーム"></select>
+          <button type="button" title="ヘルプとクレジット" onclick="window.open('help2.html')"><span class="one">ⓘ</span></button>
+          <button type="button" class="navi"></button>
+        </div>
+        <div id="menu" style="display:none;">
+          <input type="checkbox" onchange="switchSanmei(this.checked)" checked>
+          <span>山名</span>
+          <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
+          <span>中心十字</span>
+        </div>
+      </div><!-- #toolbar -->
+      <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
+        <img src="data:image/gif;base64,R0lGODlhGAAYAPAAAICAgAAAACH5BAEAAAEAIf8LSW1hZ2VNYWdpY2sOZ2FtbWE9MC40NTQ1NDUALAAAAAAYABgAAAIxjI+puwAMk4s0zAovbm9z/4FSJ5Ym4qSpcakq67ZdrJ02WJe5uOOk2fMEN0NM8XYoAAA7" width="24" height="24" alt="">
+      </div>
+      <div id="searchbar" class="bar ol-unselectable">
+        <div>
+          <form action="" name="form1" accept-charset="UTF-8">
+            <label>山名</label>
+            <input type="search" id="query" value="">
+            <button>検索</button>
+            <button type="button" title="表示／非表示" onclick="toggle('result')"><span class="one">⋮</span></button>
+          </form>
+        </div>
+        <div id="result" style="display:none;">
+          <form action="" name="form2" accept-charset="UTF-8">
+            <label>検索結果：<span id="count"></span></label>
+            <button>保存</button>
+          </form>
+          <div>
+            <table>
+              <thead>
+                <tr><th>ID</th><th>山名</th><th>標高</th></tr>
+              </thead>
+              <tbody id="items"></tbody>
+            </table>
+          </div>
+        </div><!-- #result -->
+      </div><!-- #searchbar -->
+    </div><!-- #map -->
+  </body>
+</html>
