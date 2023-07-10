@@ -21,14 +21,14 @@
   "homepage": "https://github.com/anineco/web-map-apps#readme",
   "devDependencies": {
     "cssnano": "^6.0.1",
-    "eslint": "^8.42.0",
+    "eslint": "^8.44.0",
     "is-svg": ">=5.0.0",
-    "parcel": "^2.9.2"
+    "parcel": "^2.9.3"
   },
   "dependencies": {
     "ga-gtag": "^1.1.7",
     "ol": "^7.4.0",
-    "ol-popup": "^5.0.0"
+    "ol-popup": "^5.1.0"
   },
   "browserslist": [
     "defaults"
