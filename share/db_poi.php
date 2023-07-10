@@ -32,7 +32,7 @@ foreach (array('cat', 'id', 'rgc', 'zu', 'q') as $i) {
 # |  o |  o |    3   |    7   |
 # +----+----+--------+--------+
 
-if ($mode == 'cat') {
+if ($mode === 'cat') {
 #
 # GeoJSON出力
 #
@@ -84,7 +84,7 @@ EOS;
   }
   $sth = null;
   echo PHP_EOL, ']}', PHP_EOL;
-} elseif ($mode == 'rgc' || $mode == 'zu') {
+} elseif ($mode === 'rgc' || $mode === 'zu') {
 #
 # JSON出力（逆ジオコーディング）
 #
@@ -127,7 +127,7 @@ EOS;
 #
 # JSON出力
 #
-  if ($mode == 'id' || ($mode == 'q' && preg_match('/^[0-9]+$/', $val))) {
+  if ($mode === 'id' || ($mode === 'q' && preg_match('/^[0-9]+$/', $val))) {
     if ($val == 0) {
       $sql = <<<'EOS'
 SELECT ptid AS id,kana,name,alt,lat,lon FROM poi
@@ -138,7 +138,7 @@ EOS;
       $sth = $dbh->prepare($sql);
     } else {
       $c = 0;
-      if ($mode == 'id') {
+      if ($mode === 'id') {
         $c = filter_input($type, 'c');
       }
       if ($c < 4) { # ヤマレコ
@@ -168,8 +168,38 @@ EOS;
       );
     }
     $sth = null;
+#
+# 追加情報
+#
+    if ($mode === 'id') {
+#
+# 所在地
+#
+      $address = array();
+      if ($c < 4) { # ヤマレコ
+        $sql = <<<'EOS'
+SELECT name FROM city
+JOIN poi_location USING (code)
+WHERE ptid=?
+EOS;
+      } else { # 山名一覧
+        $sql = <<<'EOS'
+SELECT name FROM city
+JOIN location USING (code)
+WHERE id=?
+EOS;
+      }
+      $sth = $dbh->prepare($sql);
+      $sth->bindValue(1, $val, PDO::PARAM_INT);
+      $sth->execute();
+      while ($row = $sth->fetch(PDO::FETCH_OBJ)) {
+        $address[] = $row->name;
+      }
+      $sth = null;
+      $geo[0]['address'] = $address;
+    }
     $output = array('geo' => $geo);
-  } elseif ($mode == 'q') {
+  } elseif ($mode === 'q') {
     if (mb_substr($val, 0, 1) == '%' || mb_substr($val, -1, 1) == '%') {
       $sql = <<<'EOS'
 SELECT ptid AS id,kana,name,alt,lat,lon FROM poi

@@ -374,6 +374,7 @@ function openPopupId(id, c, centering) {
       + '</td></tr><tr><td>標高</td><td>' + geo.alt
       + 'm</td></tr><tr><td>緯度</td><td>' + formatDigit(geo.lat)
       + '</td></tr><tr><td>経度</td><td>' + formatDigit(geo.lon)
+      + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
       + '</td></tr><tr><td>' + (c < 4 ? 'PTID' : 'ID')
       + '</td><td>' + (c < 4
         ? '<a href="https://yamare.co/i' + geo.id + '">' + geo.id + '</a>'
