@@ -127,6 +127,7 @@ EOS;
 #
 # JSON出力
 #
+  $output = array();
   if ($mode === 'id' || ($mode === 'q' && preg_match('/^[0-9]+$/', $val))) {
     if ($val == 0) {
       $sql = <<<'EOS'
