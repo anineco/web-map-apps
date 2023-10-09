@@ -2,11 +2,6 @@
 require_once './init.php';
 $cf = set_init();
 
-function dms2deg($s) {
-  preg_match('/^(\d+)(\d\d)(\d\d)$/', $s, $m);
-  return sprintf('%.6f', ($m[3] / 60 + $m[2]) / 60 + $m[1]);
-}
-
 $dsn = "mysql:dbname=$cf[database];host=$cf[host];port=$cf[port];charset=utf8mb4";
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 
@@ -51,7 +46,7 @@ if ($mode === 'cat') {
 # 全国
 #
       $sql = <<<'EOS'
-SELECT id,name,lat,lon,1 AS c FROM geo
+SELECT id,name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,1 AS c FROM geom
 WHERE act>0
 EOS;
     } else if ($v == 1) {
@@ -59,7 +54,7 @@ EOS;
 # 山行記録のある山を抽出
 #
       $sql = <<<'EOS'
-SELECT id,name,lat,lon,1 AS c FROM geo
+SELECT id,name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,1 AS c FROM geom
 JOIN (
  SELECT DISTINCT id FROM explored
  JOIN (
@@ -73,7 +68,7 @@ EOS;
 # 山+山行記録数を抽出 ※0ではなくNULLが返る
 #
       $sql = <<<'EOS'
-SELECT id,name,lat,lon,c FROM geo
+SELECT id,name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,c FROM geom
 LEFT JOIN (
  SELECT id,COUNT(rec) AS c FROM explored
  JOIN (
@@ -90,7 +85,7 @@ EOS;
 # 名山カテゴリを指定して抽出
 #
       $sql = <<<'EOS'
-SELECT id,m.name,lat,lon,1 AS c FROM geo
+SELECT id,m.name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,1 AS c FROM geom
 JOIN (
  SELECT * FROM meizan
  WHERE cat=?
@@ -101,7 +96,7 @@ EOS;
 # 名山カテゴリを指定して山行記録のある山を抽出
 #
       $sql = <<<'EOS'
-SELECT id,m.name,lat,lon,1 AS c FROM geo
+SELECT id,m.name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,1 AS c FROM geom
 JOIN (
  SELECT * FROM meizan
  WHERE cat=?
@@ -119,7 +114,7 @@ EOS;
 # 名山カテゴリを指定して山＋山行記録数を抽出 ※0ではなくNULLが返る
 #
       $sql = <<<'EOS'
-SELECT id,m.name,lat,lon,c FROM geo
+SELECT id,m.name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,c FROM geom
 JOIN (
  SELECT * FROM meizan
  WHERE cat=?
@@ -153,8 +148,13 @@ EOS;
     if ($val == 0 && isset($g_name[$id])) {
       $name = $g_name[$id] . '・' . $name;
     }
-    $lat = dms2deg($row->lat);
-    $lon = dms2deg($row->lon);
+    if ($cf['version'] >= 8) {
+      $lat = $row->x;
+      $lon = $row->y;
+    } else {
+      $lat = $row->y;
+      $lon = $row->x;
+    }
     $c = $row->c ? 1 : 0;
     echo <<<EOS
 {"id":$id,"type":"Feature","properties":{"name":"$name","c":$c},
@@ -240,7 +240,7 @@ EOS;
 # 名山カテゴリを指定してREC検索
 #
     $sql = <<<'EOS'
-SELECT id,m.kana,m.name,alt,lat,lon,auth FROM geo
+SELECT id,m.kana,m.name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
 JOIN (
  SELECT * FROM meizan
  WHERE cat=?
@@ -256,7 +256,7 @@ EOS;
 # ID/REC検索
 #
       $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon,auth FROM geo
+SELECT id,kana,name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
 WHERE act>0 AND id=?
 EOS;
       $sth = $dbh->prepare($sql);
@@ -266,7 +266,7 @@ EOS;
 # 最新の登録
 #
       $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon,auth FROM geo
+SELECT id,kana,name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
 WHERE act>0
 ORDER BY id DESC
 LIMIT 100
@@ -289,7 +289,7 @@ EOS;
 # 山名＋所在地検索
 #
       $sql = <<<EOS
-SELECT DISTINCT id,geo.kana,geo.name,alt,lat,lon,auth FROM geo
+SELECT DISTINCT id,geom.kana,geom.name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
 JOIN (
  SELECT * FROM sanmei
  WHERE name$eq?
@@ -310,7 +310,7 @@ EOS;
 # 山名検索
 #
       $sql = <<<EOS
-SELECT DISTINCT id,geo.kana,geo.name,alt,lat,lon,auth FROM geo
+SELECT DISTINCT id,geom.kana,geom.name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
 JOIN (
  SELECT * FROM sanmei
  WHERE name$eq?
@@ -332,14 +332,21 @@ EOS;
       $name = $g_name[$id] . '・' . $name;
       $kana = $g_kana[$id] . '・' . $kana;
     }
+    if ($cf['version'] >= 8) {
+      $lat = $row->x;
+      $lon = $row->y;
+    } else {
+      $lat = $row->y;
+      $lon = $row->x;
+    }
     $geo[] = array(
       'id' => $id,
       'kana' => $kana,
       'name' => $name,
       'alt' => $row->alt,
-      'lat' => $row->lat,
-      'lon' => $row->lon,
-      'auth' => $row->auth
+      'lat' => $lat,
+      'lon' => $lon,
+      'auth' => 1
     );
   }
   $sth = null;
@@ -386,20 +393,19 @@ EOS;
 # 山行記録
 #
     $sql = <<<'EOS'
-SELECT summit,link,record.start,end,title,summary,image FROM record
+SELECT link,start,end,title,summary,image FROM record
 JOIN (
  SELECT * FROM explored
  WHERE id=?
 ) AS e USING (rec)
 WHERE link IS NOT NULL
-ORDER BY summit DESC
+ORDER BY start DESC
 EOS;
     $sth = $dbh->prepare($sql);
     $sth->bindValue(1, $val, PDO::PARAM_INT);
     $sth->execute();
     while ($row = $sth->fetch(PDO::FETCH_OBJ)) {
       $rec[] = array(
-        'summit' => $row->summit,
         'link' => $row->link,
         'start' => $row->start,
         'end' => $row->end,
