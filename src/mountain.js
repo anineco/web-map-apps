@@ -224,10 +224,6 @@ function formatDEG(deg) {
   return formatDMS(toDMS(deg));
 }
 
-function formatDigit(s) {
-  return formatDMS(fromDigitDMS(s));
-}
-
 function fromStringYX(s) {
   let ma = s.match(/^(\d+)[,\s]\s*(\d+)$/);
   if (ma) {
@@ -342,7 +338,7 @@ function openPopupId(id, centering) {
   .then(response => response.json())
   .then(function (json) {
     const geo = json.geo[0];
-    const coordinate = fromLonLat([fromDigit(geo.lon), fromDigit(geo.lat)]);
+    const coordinate = fromLonLat([geo.lon, geo.lat]);
     popup.show(coordinate,
       '<h2>' + geo.name
       + '</h2><table><tbody><tr><td>よみ</td><td>' + geo.kana
@@ -351,8 +347,8 @@ function openPopupId(id, centering) {
             alias => '<ruby>' + alias.name + '<rt>' + alias.kana + '</rt></ruby>'
           ).join('<br>') : '')
       + '</td></tr><tr><td>標高</td><td>' + geo.alt
-      + 'm</td></tr><tr><td>緯度</td><td>' + formatDigit(geo.lat)
-      + '</td></tr><tr><td>経度</td><td>' + formatDigit(geo.lon)
+      + 'm</td></tr><tr><td>緯度</td><td>' + formatDEG(geo.lat)
+      + '</td></tr><tr><td>経度</td><td>' + formatDEG(geo.lon)
       + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
       + '</td></tr><tr><td>ID</td><td>'
       + '<span data-auth="' + geo.auth + '">' + geo.id + '</span>'
@@ -376,20 +372,8 @@ document.forms['form1'].addEventListener('submit', function (event) {
 }, false);
 
 document.forms['form2'].addEventListener('submit', function (event) {
-  /*
-  const geo = '{"type":"FeatureCollection","features":['
-    + result_json.geo.map(x =>
-      '{"type":"Feature","geometry":{"type":"Point","coordinates":['
-      + fromDigit(x.lon).toFixed(6) + ',' + fromDigit(x.lat).toFixed(6)
-      + ']},"properties":{"name":"' + x.name
-      + '","よみ":"' + x.kana
-      + '","標高":' + x.alt
-      + ',"ID":' + x.id
-      + ',"_iconUrl":"https://map.jpn.org/icon/952015.png","_iconSize":[24,24],"_iconAnchor":[12,12]}}'
-    ).join() + ']}';
-    */
   const csv = 'ID,山名,よみ,標高,緯度,経度,備考\n' + result_json.geo.map(x => [
-    x.id, x.name, x.kana, x.alt, fromDigit(x.lat).toFixed(6), fromDigit(x.lon).toFixed(6), ''
+    x.id, x.name, x.kana, x.alt, x.lat, x.lon, ''
   ].join()).join('\n') + '\n';
   const b = new Blob([csv], { type: 'text/csv' });
   const a = document.createElement('a');

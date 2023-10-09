@@ -237,18 +237,6 @@ function toDMS(deg) { // DEG -> DMS
   return [ parseInt(sec / 3600), parseInt((sec % 3600) / 60), sec % 60 ];
 }
 
-function fromDMS(dms) { // DMS -> DEG
-  return (Number(dms[2]) / 60 + Number(dms[1])) / 60 + Number(dms[0]);
-}
-
-function fromDigitDMS(s) { // digit -> DMS
-  return String(s).match(/^(\d+)(\d\d)(\d\d)$/).slice(1);
-}
-
-function fromDigit(s) { // digit -> DEG
-  return fromDMS(fromDigitDMS(s));
-}
-
 function formatDMS(dms) {
   const m = ('0' + dms[1]).slice(-2);
   const s = ('0' + dms[2]).slice(-2);
@@ -259,8 +247,17 @@ function formatDEG(deg) {
   return formatDMS(toDMS(deg));
 }
 
-function formatDigit(s) {
-  return formatDMS(fromDigitDMS(s));
+function interval(start, end) {
+  const s = start.split('-');
+  const e = end.split('-');
+  if (e[0] != s[0]) {
+    return start + '/' + end;
+  } else if (e[1] != s[1]) {
+    return start + '/' + e[1] + '-' + e[2];
+  } else if (e[2] != s[2]) {
+    return start + '/' + e[2];
+  }
+  return start;
 }
 
 const popup = new Popup();
@@ -335,7 +332,7 @@ function showRecords(recs) {
     const tr = document.createElement('tr'); // new row
     tr.innerHTML = '<td><a href="' + rec.link
       + '"><img src="' + (rec.image || 'image/no_image.png')
-      + '" width="60" height="45"></a></td><td>' + rec.summit
+      + '" width="60" height="45"></a></td><td>' + interval(rec.start, rec.end)
       + '<br><a href="' + rec.link
       + '">' + rec.title
       + '</a>：' + rec.summary
@@ -349,7 +346,7 @@ function openPopupId(id, centering) {
   .then(response => response.json())
   .then(function (json) {
     const geo = json.geo[0];
-    const coordinate = fromLonLat([fromDigit(geo.lon), fromDigit(geo.lat)]);
+    const coordinate = fromLonLat([geo.lon, geo.lat]);
     const html = '<h2>' + geo.name
       + '</h2><table><tbody><tr><td>よみ</td><td>' + geo.kana
       + (param.cat == 0 && geo.alias.length > 0 ?
@@ -357,8 +354,8 @@ function openPopupId(id, centering) {
             alias => '<ruby>' + alias.name + '<rt>' + alias.kana + '</rt></ruby>'
           ).join('<br>') : '')
       + '</td></tr><tr><td>標高</td><td>' + geo.alt
-      + 'm</td></tr><tr><td>緯度</td><td>' + formatDigit(geo.lat)
-      + '</td></tr><tr><td>経度</td><td>' + formatDigit(geo.lon)
+      + 'm</td></tr><tr><td>緯度</td><td>' + formatDEG(geo.lat)
+      + '</td></tr><tr><td>経度</td><td>' + formatDEG(geo.lon)
       + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
       + '</td></tr></tbody></table>';
     popup.show(coordinate, html);
