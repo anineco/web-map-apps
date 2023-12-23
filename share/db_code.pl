@@ -9,9 +9,8 @@ use open qw(:utf8 :std);
 use DBI;
 use Time::Piece;
 
-my $dsn = 'DBI:mysql:anineco_tozan;mysql_read_default_file=~/.my.cnf'; # 🔖
-my $dbh = DBI->connect($dsn, undef, undef,
-  {mysql_enable_utf8mb4 => 1}) or die $DBI::errstr;
+my $dsn = 'DBI:mysql:anineco_tozan;mysql_read_default_file=/home/anineco/.my.cnf'; # 🔖
+my $dbh = DBI->connect($dsn, undef, undef, {mysql_enable_utf8mb4 => 1}) or die $DBI::errstr;
 
 my $sth1 = $dbh->prepare(<<'EOS');
 SELECT id,name FROM geom
@@ -20,7 +19,7 @@ WHERE act>0 AND code IS NULL
 EOS
 
 my $sth2 = $dbh->prepare(<<'EOS');
-SELECT ST_Buffer(pt,0.00036/*!80003 *PI()/180*6378137.0 */) INTO @p FROM geom
+SELECT ST_Buffer(pt,0.00036) INTO @p FROM geom
 WHERE id=?
 EOS
 
