@@ -1,14 +1,6 @@
 <?php
-require_once './init.php';
-$cf = set_init();
-$cf['port'] = $cf['port'] ?? '3306';
-
-function dms2deg($s) {
-  preg_match('/^(\d+)(\d\d)(\d\d)$/', $s, $m);
-  return sprintf('%.6f', ($m[3] / 60 + $m[2]) / 60 + $m[1]);
-}
-
-$dsn = "mysql:dbname=$cf[database];host=$cf[host];port=$cf[port];charset=utf8mb4";
+$cf = parse_ini_file('/home/anineco/.my.cnf'); # 🔖 設定ファイル
+$dsn = "mysql:host=$cf[host];dbname=$cf[database];charset=utf8mb4";
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 
 $type = !empty($_POST) ? INPUT_POST : INPUT_GET;
@@ -50,7 +42,7 @@ EOS;
   } elseif ($val == 4) {
     # 山名一覧 \ ヤマレコ
     $sql = <<<'EOS'
-SELECT g.id,g.name,g.lat,g.lon FROM geo AS g
+SELECT g.id,g.name,g.lat,g.lon FROM geom AS g
 LEFT JOIN poi AS p USING (id)
 WHERE g.act>0 AND p.id IS NULL
 EOS;
@@ -58,7 +50,7 @@ EOS;
   } else {
     # 山名一覧 ∩ ヤマレコ
     $sql = <<<'EOS'
-SELECT id,name,lat,lon FROM geo
+SELECT id,name,lat,lon FROM geom
 JOIN (SELECT id,MAX(c) AS m FROM poi GROUP BY id) AS p
 USING (id)
 WHERE act>0 AND m=?
@@ -74,8 +66,8 @@ EOS;
     }
     $id = $row->id;
     $name = $row->name;
-    $lat = dms2deg($row->lat);
-    $lon = dms2deg($row->lon);
+    $lat = $row->lat;
+    $lon = $row->lon;
     echo <<<EOS
 {"id":$id,"type":"Feature","properties":{"name":"$name","c":$val},
 "geometry":{"type":"Point","coordinates":[$lon,$lat]}}
@@ -91,15 +83,9 @@ EOS;
   $lon = filter_input($type, 'lon');
   $lat = filter_input($type, 'lat');
   $wkt = "POINT($lon $lat)";
-  if ($cf['version'] >= 8) {
-    $sql = <<<'EOS'
-SET @pt=ST_GeomFromText(?,4326,'axis-order=long-lat')
+  $sql = <<<'EOS'
+SET @pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat'*/)
 EOS;
-  } else {
-    $sql = <<<'EOS'
-SET @pt=ST_GeomFromText(?,4326)
-EOS;
-  }
   $sth = $dbh->prepare($sql);
   $sth->bindValue(1, $wkt, PDO::PARAM_STR);
   $sth->execute();
@@ -149,7 +135,7 @@ WHERE act>0 AND c>=0 AND ptid=?
 EOS;
       } else { # 山名一覧
         $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon FROM geo
+SELECT id,kana,name,alt,lat,lon FROM geom
 WHERE act>0 AND id=?
 EOS;
       }

@@ -255,10 +255,6 @@ function formatDEG(deg) {
   return formatDMS(toDMS(deg));
 }
 
-function formatDigit(s) {
-  return formatDMS(fromDigitDMS(s));
-}
-
 function fromStringYX(s) {
   let ma = s.match(/^(\d+)[,\s]\s*(\d+)$/);
   if (ma) {
@@ -367,13 +363,13 @@ function openPopupId(id, c, centering) {
   .then(response => response.json())
   .then(function (json) {
     const geo = json.geo[0];
-    const coordinate = fromLonLat([fromDigit(geo.lon), fromDigit(geo.lat)]);
+    const coordinate = fromLonLat([geo.lon, geo.lat]);
     popup.show(coordinate,
       '<h2>' + geo.name
       + '</h2><table><tbody><tr><td>よみ</td><td>' + strip(geo.kana)
       + '</td></tr><tr><td>標高</td><td>' + geo.alt
-      + 'm</td></tr><tr><td>緯度</td><td>' + formatDigit(geo.lat)
-      + '</td></tr><tr><td>経度</td><td>' + formatDigit(geo.lon)
+      + 'm</td></tr><tr><td>緯度</td><td>' + formatDEG(geo.lat)
+      + '</td></tr><tr><td>経度</td><td>' + formatDEG(geo.lon)
       + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
       + '</td></tr><tr><td>' + (c < 4 ? 'PTID' : 'ID')
       + '</td><td>' + (c < 4

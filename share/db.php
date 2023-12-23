@@ -1,8 +1,6 @@
 <?php
-require_once './init.php';
-$cf = set_init();
-
-$dsn = "mysql:dbname=$cf[database];host=$cf[host];port=$cf[port];charset=utf8mb4";
+$cf = parse_ini_file('/home/anineco/.my.cnf'); # 🔖 設定ファイル
+$dsn = "mysql:host=$cf[host];dbname=$cf[database];charset=utf8mb4";
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 
 $type = !empty($_POST) ? INPUT_POST : INPUT_GET;
@@ -46,7 +44,7 @@ if ($mode === 'cat') {
 # 全国
 #
       $sql = <<<'EOS'
-SELECT id,name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,1 AS c FROM geom
+SELECT id,name,lat,lon,1 AS c FROM geom
 WHERE act>0
 EOS;
     } else if ($v == 1) {
@@ -54,7 +52,7 @@ EOS;
 # 山行記録のある山を抽出
 #
       $sql = <<<'EOS'
-SELECT id,name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,1 AS c FROM geom
+SELECT id,name,lat,lon,1 AS c FROM geom
 JOIN (
  SELECT DISTINCT id FROM explored
  JOIN (
@@ -68,7 +66,7 @@ EOS;
 # 山+山行記録数を抽出 ※0ではなくNULLが返る
 #
       $sql = <<<'EOS'
-SELECT id,name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,c FROM geom
+SELECT id,name,lat,lon,c FROM geom
 LEFT JOIN (
  SELECT id,COUNT(rec) AS c FROM explored
  JOIN (
@@ -85,7 +83,7 @@ EOS;
 # 名山カテゴリを指定して抽出
 #
       $sql = <<<'EOS'
-SELECT id,m.name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,1 AS c FROM geom
+SELECT id,m.name,lat,lon,1 AS c FROM geom
 JOIN (
  SELECT * FROM meizan
  WHERE cat=?
@@ -96,7 +94,7 @@ EOS;
 # 名山カテゴリを指定して山行記録のある山を抽出
 #
       $sql = <<<'EOS'
-SELECT id,m.name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,1 AS c FROM geom
+SELECT id,m.name,lat,lon,1 AS c FROM geom
 JOIN (
  SELECT * FROM meizan
  WHERE cat=?
@@ -114,7 +112,7 @@ EOS;
 # 名山カテゴリを指定して山＋山行記録数を抽出 ※0ではなくNULLが返る
 #
       $sql = <<<'EOS'
-SELECT id,m.name,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y,c FROM geom
+SELECT id,m.name,lat,lon,c FROM geom
 JOIN (
  SELECT * FROM meizan
  WHERE cat=?
@@ -148,14 +146,9 @@ EOS;
     if ($val == 0 && isset($g_name[$id])) {
       $name = $g_name[$id] . '・' . $name;
     }
-    if ($cf['version'] >= 8) {
-      $lat = $row->x;
-      $lon = $row->y;
-    } else {
-      $lat = $row->y;
-      $lon = $row->x;
-    }
     $c = $row->c ? 1 : 0;
+    $lat = $row->lat;
+    $lon = $row->lon;
     echo <<<EOS
 {"id":$id,"type":"Feature","properties":{"name":"$name","c":$c},
 "geometry":{"type":"Point","coordinates":[$lon,$lat]}}
@@ -171,15 +164,9 @@ EOS;
   $lon = filter_input($type, 'lon');
   $lat = filter_input($type, 'lat');
   $wkt = "POINT($lon $lat)";
-  if ($cf['version'] >= 8) {
-    $sql = <<<'EOS'
-SET @pt=ST_GeomFromText(?,4326,'axis-order=long-lat')
+  $sql = <<<'EOS'
+SET @pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */)
 EOS;
-  } else {
-    $sql = <<<'EOS'
-SET @pt=ST_GeomFromText(?,4326)
-EOS;
-  }
   $sth = $dbh->prepare($sql);
   $sth->bindValue(1, $wkt, PDO::PARAM_STR);
   $sth->execute();
@@ -240,7 +227,7 @@ EOS;
 # 名山カテゴリを指定してREC検索
 #
     $sql = <<<'EOS'
-SELECT id,m.kana,m.name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
+SELECT id,m.kana,m.name,alt,lat,lon FROM geom
 JOIN (
  SELECT * FROM meizan
  WHERE cat=?
@@ -256,7 +243,7 @@ EOS;
 # ID/REC検索
 #
       $sql = <<<'EOS'
-SELECT id,kana,name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
+SELECT id,kana,name,alt,lat,lon FROM geom
 WHERE act>0 AND id=?
 EOS;
       $sth = $dbh->prepare($sql);
@@ -266,7 +253,7 @@ EOS;
 # 最新の登録
 #
       $sql = <<<'EOS'
-SELECT id,kana,name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
+SELECT id,kana,name,alt,lat,lon FROM geom
 WHERE act>0
 ORDER BY id DESC
 LIMIT 100
@@ -289,7 +276,7 @@ EOS;
 # 山名＋所在地検索
 #
       $sql = <<<EOS
-SELECT DISTINCT id,geom.kana,geom.name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
+SELECT DISTINCT id,geom.kana,geom.name,alt,lat,lon FROM geom
 JOIN (
  SELECT * FROM sanmei
  WHERE name$eq?
@@ -310,7 +297,7 @@ EOS;
 # 山名検索
 #
       $sql = <<<EOS
-SELECT DISTINCT id,geom.kana,geom.name,alt,FORMAT(ST_X(pt),4) AS x,FORMAT(ST_Y(pt),4) AS y FROM geom
+SELECT DISTINCT id,geom.kana,geom.name,alt,lat,lon FROM geom
 JOIN (
  SELECT * FROM sanmei
  WHERE name$eq?
@@ -332,20 +319,13 @@ EOS;
       $name = $g_name[$id] . '・' . $name;
       $kana = $g_kana[$id] . '・' . $kana;
     }
-    if ($cf['version'] >= 8) {
-      $lat = $row->x;
-      $lon = $row->y;
-    } else {
-      $lat = $row->y;
-      $lon = $row->x;
-    }
     $geo[] = array(
       'id' => $id,
       'kana' => $kana,
       'name' => $name,
       'alt' => $row->alt,
-      'lat' => $lat,
-      'lon' => $lon,
+      'lat' => $row->lat,
+      'lon' => $row->lon,
       'auth' => 1
     );
   }
