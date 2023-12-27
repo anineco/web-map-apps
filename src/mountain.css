@@ -11,6 +11,9 @@
 body {
   font-family: sans-serif;
 }
+#map {
+  position: relative;
+}
 #crosshair {
   position: absolute;
   top: 50%;
@@ -112,12 +115,12 @@ button.navi a {
   }
 }
 #result > div {
-  max-height: calc(50vh - 84px);
+  max-height: calc(50vh - 150px);
   overflow-y: auto;
 }
-@media screen and (min-width: 1024px) {
+@media screen and (min-width: 865px) {
   #result > div {
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 350px);
   }
 }
 #result table,
