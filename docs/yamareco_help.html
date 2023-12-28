@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>クレジット表記</title>
+<link rel="stylesheet" href="css/common.css">
+<style>
+#container {
+  width: 750px;
+  margin-left: calc(50vw - 375px);
+}
+figure {
+  margin: 0;
+  text-align: center;
+}
+@media screen and (max-width: 749px) {
+  body {
+    margin: 0;
+  }
+  #container {
+    width: auto;
+    margin-left: 0;
+    padding: 0 5px;
+  }
+}
+</style>
+</head>
+<body>
+<div id="container">
+<h2>クレジット表記</h2>
+<p>この地図の作成にあたっては、国土地理院長の承認を得て、同院発行の数値地図25000（地名・公共施設）を使用した。
+（承認番号 平29情使、第1007号）</p>
+<p>また、使用しているタイル画像のクレジットは次の表のとおり。</p>
+<table class="base">
+<thead><tr><th>ベースマップ</th><th>クレジット</th></tr></thead>
+<tbody>
+<tr><td>標準、淡色、写真</td><td><a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a></t
+d></tr>
+<tr><td>OTM</td><td>&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors,
+&copy; <a href="https://opentopomap.org/">OpenTopoMap</a>
+(<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)</td></tr>
+</tbody>
+</table>
+<p>その他、下記のデータ、ウェブサービス、コードを利用している。</p>
+<ul>
+<li><a href="https://nlftp.mlit.go.jp/">国土数値情報</a>（国土交通省）の行政区域データ（加工して利用）</li>
+<li><a href="https://maps.gsi.go.jp/development/elevation_s.html">地理院標高API</a></li>
+<li><a href="https://openlayers.org/">OpenLayers</a></li>
+<li><a href="https://github.com/walkermatt/ol-popup">OpenLayers Popup</a></li>
+<li><a href="https://sites.google.com/site/apiforyamareco/">ヤマレコ Web API</a></li>
+</ul>
+<hr>
+<div id="navi"><a href="#" onclick="window.close()">閉じる</a></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ヘルプとクレジット</title>
+<link rel="stylesheet" href="css/tozan.css">
+<link rel="stylesheet" href="css/list.css">
+<style>
+body { background-color: rgb(231,231,255); }
+main { background-image: url(image/sakura_02.png); }
+#container h2 {
+  margin: 10pt 0 5pt 0;
+  padding: 5pt;
+  border-left: #bbf 10pt solid;
+  font-size: medium;
+}
+figure {
+  margin: 0;
+  text-align: center;
+}
+</style>
+<script src="js/tozan.js" defer></script>
+</head>
+<body>
+<div id="container">
+<main>
+<article>
+<h2>ヘルプ</h2>
+<p>例として、「地図から選択」の「ぐんま百名山」のページをスマートフォンで表示した場合の画面を図1に示します。PCで表示した場合はレイアウトが変わりますが、操作方法は同様です。地図をスムーズにスクロールしたり、ズームしたり、回転させることができます。PCの場合の回転は、Shift+Altキーとマウス右ボタンを同時に押しながらマウスカーソルを動かして行います。</p>
+<figure>
+<img src="map_img/Fig01.png" srcset="map_img/2x/Fig01.png 2x" width="375" height="667" alt="">
+<figcaption>図1 スマートフォンによる表示例</figcaption>
+</figure>
+<p>青字または黄色字の山名や、<img src="symbols/Summit.png" width="24" height="24" alt="山頂">のアイコンをクリックすると、その山の情報がポップアップで表示され、登頂した山行記録を検索して表示します（図2）。ポップアップは右上の ✖︎ をクリックすると消えます。検索結果の山行記録をクリックすると、当該ページにジャンプします。なお、青字は検索結果が1件以上ある山、黄色字（図1では右下の"観音山"や"庚申山"）は山行記録がない山を表します。</p>
+<figure>
+<img src="map_img/Fig02.png" srcset="map_img/2x/Fig02.png 2x" width="375" height="667" alt="">
+<figcaption>図2 ポップアップと山行記録の表示</figcaption>
+</figure>
+<p>ポップアップに表示される<span style="color:blue;">所在</span>は、国土数値情報（行政区域）を利用して、<span style="color:blue;">緯度</span>と<span style="color:blue;">経度</span>から都道府県＋市区町村を逆ジオコーディングで求めたものです。</p>
+<p>それぞれのボタンとチェックボックスの機能を、図3で付記した<span style="color:red;">丸数字</span>を用いて説明します。</p>
+<figure>
+<img src="map_img/Fig03.png" srcset="map_img/2x/Fig03.png 2x" width="375" height="667" alt="">
+<figcaption>図3 ボタンとチェックボックスの配置</figcaption>
+</figure>
+<p><span style="color:red;">①</span> 下段のメニュー（<span style="color:red;">⑥</span>、<span style="color:red;">⑦</span>）の表示をオン／オフ。<br>
+<span style="color:red;">②</span> 十字線で示される中心位置にポップアップを表示（図4）。<br>
+<span style="color:red;">③</span> ベースマップ（標準、淡色、写真、OTM）を選択。<br>
+<span style="color:red;">④</span> ズームレベルを選択。<br>
+<span style="color:red;">⑤</span> このページを表示。<br>
+<span style="color:red;">⑥</span> 山名とアイコンの表示をオン／オフ。<br>
+<span style="color:red;">⑦</span> 中心位置の十字線の表示をオン／オフ。<br>
+<span style="color:red;">⑧</span> 山行記録の表示を一時的にオン／オフ。</p>
+<figure>
+<img src="map_img/Fig04.png" srcset="map_img/2x/Fig04.png 2x" width="375" height="667" alt="">
+<figcaption>図4 中心位置のポップアップ</figcaption>
+</figure>
+<h2>クレジット表記</h2>
+<p>「地図から選択」のWeb地図の作成にあたっては、国土地理院長の承認を得て、同院発行の数値地図25000（地名・公共施設）を使用した。
+（承認番号 平29情使、第1007号）</p>
+<p>また、使用しているタイル画像のクレジットは次の表のとおり。</p>
+<table>
+<thead><tr><th>ベースマップ</th><th>クレジット</th></tr></thead>
+<tbody>
+<tr><td>標準、淡色、写真</td><td><a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a></td></tr>
+<tr><td>OTM</td><td>© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors,
+© <a href="https://opentopomap.org/">OpenTopoMap</a>
+(<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)</td></tr>
+</tbody>
+</table>
+<p>その他、下記のデータ、ウェブサービス、コードを利用している。</p>
+<ul>
+<li><a href="https://nlftp.mlit.go.jp/">国土数値情報</a>（国土交通省）の行政区域データ（加工して利用）</li>
+<li><a href="https://maps.gsi.go.jp/development/elevation_s.html">地理院標高API</a></li>
+<li><a href="https://openlayers.org/">OpenLayers</a></li>
+<li><a href="https://github.com/walkermatt/ol-popup">OpenLayers Popup</a></li>
+</ul>
+</article>
+</main>
+<footer>
+<hr>
+<nav><a href="#" onclick="window.close()">閉じる</a></nav>
+</footer>
+</div><!-- #container -->
+</body>
+</html>
