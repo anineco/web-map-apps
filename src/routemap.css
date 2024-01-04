@@ -27,8 +27,10 @@ body {
   width: 100%;
   font-size: 0.875rem;
 }
-div.bar > div {
+#toolbar > div {
   display: flex;
+}
+div.bar > div {
   padding: 2px 8px;
   color: var(--ol-foreground-color);
   background: var(--ol-background-color);
