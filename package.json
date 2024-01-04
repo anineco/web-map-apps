@@ -20,7 +20,7 @@
   },
   "homepage": "https://github.com/anineco/web-map-apps#readme",
   "devDependencies": {
-    "cssnano": "^6.0.2",
+    "cssnano": "^6.0.3",
     "eslint": "^8.56.0",
     "is-svg": ">=5.0.0",
     "parcel": "^2.10.3"
