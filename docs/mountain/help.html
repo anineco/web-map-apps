@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>ヘルプとクレジット</title>
+<base href="..">
 <link rel="stylesheet" href="css/common.css">
 <style>
 #container {
@@ -38,19 +39,19 @@ figure {
 <p>例として、本サイトをスマートフォンで表示した場合の画面を図1に示します。PCで表示した場合はレイアウトが変わりますが、操作方法は同様です。地図をスムーズにスクロールしたり、ズームしたり、回転させることができます。PCの場合の回転は、Shift+Altキーとマウス右ボタンを同時に押しながらマウスカーソルを動かして行います。</p>
 <p>なお、図1にある<span style="color:blue;">榛名山・掃部ヶ岳</span>のような"・"を含む山名は、<span style="color:blue;">総称・ピーク名</span>を表します。総称は原則として山域の最高峰に付記されます。</p>
 <figure>
-<img src="mountain_img/Fig01.png" srcset="mountain_img/2x/Fig01.png 2x" width="375" height="667" alt="">
+<img src="mountain/Fig01.png" srcset="mountain/2x/Fig01.png 2x" width="375" height="667" alt="">
 <figcaption>図1 スマートフォンによる表示例</figcaption>
 </figure>
 <p>青字の山名または<img src="icon/952015.png" alt="山頂">のアイコンをクリックすると、その山の情報がポップアップで表示されます（図2）。ポップアップは右上の ✖︎ をクリックすると消えます。</p>
 <figure>
-<img src="mountain_img/Fig02.png" srcset="mountain_img/2x/Fig02.png 2x" width="375" height="667" alt="">
+<img src="mountain/Fig02.png" srcset="mountain/2x/Fig02.png 2x" width="375" height="667" alt="">
 <figcaption>図2 ポップアップの表示</figcaption>
 </figure>
 <p>山名に別名があれば、ポップアップに表示されます（図5）。ポップアップに表示される<span style="color:blue;">所在</span>は、国土数値情報（行政区域）を利用して、<span style="color:blue;">緯度</span>と<span style="color:blue;">経度</span>から都道府県＋市区町村を逆ジオコーディングで求めたものです。ただし、行政区域の境界付近にある山の場合は、隣接する行政区域に属する／属しないの結果が、地形図から読み取れる結果と相違する場合があります。</p>
 <p><span style="color:blue;">ID</span>は、データベースによる管理のため、それぞれの山に一意に割り振られた識別番号（identification number）です。その値はデータベースへの登録順（欠番あり）で、その他の意味は特にありません。</p>
 <p>それぞれのボタンとチェックボックスの機能を、図3で付記した<span style="color:red;">丸数字</span>を用いて説明します。</p>
 <figure>
-<img src="mountain_img/Fig03.png" srcset="mountain_img/2x/Fig03.png 2x" width="375" height="667" alt="">
+<img src="mountain/Fig03.png" srcset="mountain/2x/Fig03.png 2x" width="375" height="667" alt="">
 <figcaption>図3 ボタンとチェックボックスの配置</figcaption>
 </figure>
 <p><span style="color:red;">①</span> 下段のメニュー（<span style="color:red;">⑥</span>、<span style="color:red;">⑦</span>）の表示をオン／オフ。<br>
@@ -62,13 +63,13 @@ figure {
 <span style="color:red;">⑦</span> 中心位置の十字線の表示をオン／オフ。<br>
 <span style="color:red;">⑧</span> 検索結果の表示を一時的にオン／オフ。</p>
 <figure>
-<img src="mountain_img/Fig04.png" srcset="mountain_img/2x/Fig04.png 2x" width="375" height="667" alt="">
+<img src="mountain/Fig04.png" srcset="mountain/2x/Fig04.png 2x" width="375" height="667" alt="">
 <figcaption>図4 中心位置のポップアップ</figcaption>
 </figure>
 <h2>山名検索機能</h2>
 <p>"山名"欄に文字列を入力して"検索"ボタンをクリックすると、山名検索が実行されます。検索は、山名、総称、別名に渡って実行されます。検索結果は標高の降順でソートされて表示されます。検索結果の一つをクリックすると、地図の中心位置が選択した山の位置に移動し、ポップアップを表示します（図5）。</p>
 <figure>
-<img src="mountain_img/Fig05.png" srcset="mountain_img/2x/Fig05.png 2x" width="376" height="667" alt="">
+<img src="mountain/Fig05.png" srcset="mountain/2x/Fig05.png 2x" width="376" height="667" alt="">
 <figcaption>図5 検索結果とポップアップ</figcaption>
 </figure>
 <p>検索文字列には次の特殊文字を含めることができます。いずれも半角文字で入力してください。</p>
