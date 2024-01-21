@@ -34,8 +34,7 @@ body {
   width: 100%;
   font-size: 0.875rem;
 }
-#toolbar > div,
-#searchbar form {
+#toolbar > div {
   display: flex;
 }
 div.bar > div {
