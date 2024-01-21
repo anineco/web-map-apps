@@ -26,10 +26,7 @@ if ($mode === 'cat') {
 #
       $sql = <<<'EOS'
 SELECT id,s.name,lat,lon,1 AS c FROM geom
-JOIN (
- SELECT id,group_concat(name ORDER BY type SEPARATOR '・') AS name
- FROM sanmei WHERE type<=1 GROUP BY id
-) AS s USING (id)
+JOIN sosho AS s USING (id)
 WHERE act>0
 EOS;
     } else if ($v == 1) {
@@ -38,6 +35,7 @@ EOS;
 #
       $sql = <<<'EOS'
 SELECT id,s.name,lat,lon,1 AS c FROM geom
+JOIN sosho AS s USING (id)
 JOIN (
  SELECT DISTINCT id FROM explored
  JOIN (
@@ -45,10 +43,6 @@ JOIN (
   WHERE link IS NOT NULL
  ) AS r USING (rec)
 ) AS e USING (id)
-JOIN (
- SELECT id,group_concat(name ORDER BY type SEPARATOR '・') AS name
- FROM sanmei WHERE type<=1 GROUP BY id
-) AS s USING (id)
 EOS;
     } else if ($v == 2) {
 #
@@ -56,6 +50,7 @@ EOS;
 #
       $sql = <<<'EOS'
 SELECT id,s.name,lat,lon,c FROM geom
+JOIN sosho AS s USING (id)
 LEFT JOIN (
  SELECT id,COUNT(rec) AS c FROM explored
  JOIN (
@@ -63,10 +58,6 @@ LEFT JOIN (
   WHERE link IS NOT NULL
  ) AS r USING (rec) GROUP BY id
 ) AS e USING (id)
-JOIN (
- SELECT id,group_concat(name ORDER BY type SEPARATOR '・') AS name
- FROM sanmei WHERE type<=1 GROUP BY id
-) AS s USING (id)
 WHERE act>0
 EOS;
     }
@@ -233,12 +224,7 @@ EOS;
 #
       $sql = <<<'EOS'
 SELECT id,s.kana,s.name,alt,lat,lon FROM geom
-JOIN (
- SELECT id,
-  group_concat(kana ORDER BY type SEPARATOR '・') AS kana,
-  group_concat(name ORDER BY type SEPARATOR '・') AS name
- FROM sanmei WHERE type<=1 GROUP BY id
-) AS s USING (id)
+JOIN sosho AS s USING (id)
 WHERE act>0 AND id=?
 EOS;
       $sth = $dbh->prepare($sql);
@@ -249,12 +235,7 @@ EOS;
 #
       $sql = <<<'EOS'
 SELECT id,s.kana,s.name,alt,lat,lon FROM geom
-JOIN (
- SELECT id,
-  group_concat(kana ORDER BY type SEPARATOR '・') AS kana,
-  group_concat(name ORDER BY type SEPARATOR '・') AS name
- FROM sanmei WHERE type<=1 GROUP BY id
-) AS s USING (id)
+JOIN sosho AS s USING (id)
 WHERE act>0
 ORDER BY id DESC
 LIMIT 100
@@ -278,6 +259,7 @@ EOS;
 #
       $sql = <<<EOS
 SELECT DISTINCT id,s.kana,s.name,alt,lat,lon FROM geom
+JOIN sosho AS s USING (id)
 JOIN (
  SELECT id FROM sanmei
  WHERE name$eq?
@@ -287,12 +269,6 @@ JOIN (
  JOIN city USING (code)
  WHERE name LIKE ?
 ) AS g USING (id)
-JOIN (
- SELECT id,
-  group_concat(kana ORDER BY type SEPARATOR '・') AS kana,
-  group_concat(name ORDER BY type SEPARATOR '・') AS name
- FROM sanmei WHERE type<=1 GROUP BY id
-) AS s USING (id)
 ORDER BY alt DESC
 LIMIT 1000
 EOS;
@@ -305,16 +281,11 @@ EOS;
 #
       $sql = <<<EOS
 SELECT DISTINCT id,s.kana,s.name,alt,lat,lon FROM geom
+JOIN sosho AS s USING (id)
 JOIN (
  SELECT id FROM sanmei
  WHERE name$eq?
 ) AS m USING(id)
-JOIN (
- SELECT id,
-  group_concat(kana ORDER BY type SEPARATOR '・') AS kana,
-  group_concat(name ORDER BY type SEPARATOR '・') AS name
- FROM sanmei WHERE type<=1 GROUP BY id
-) AS s USING (id)
 ORDER BY alt DESC
 LIMIT 1000
 EOS;
