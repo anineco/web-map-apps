@@ -14,25 +14,6 @@ foreach (array('cat', 'id', 'rec', 'rgc', 'zu', 'q') as $i) {
   }
 }
 
-$g_kana = array();
-$g_name = array();
-if ($mode !== 'rgc' && $mode !== 'zu') {
-#
-# 総称
-#
-  $sql = <<<'EOS'
-SELECT id,kana,name FROM sanmei
-WHERE type=0
-EOS;
-  $sth = $dbh->prepare($sql);
-  $sth->execute();
-  while ($row = $sth->fetch(PDO::FETCH_OBJ)) {
-    $g_kana[$row->id] = $row->kana;
-    $g_name[$row->id] = $row->name;
-  }
-  $sth = null;
-}
-
 if ($mode === 'cat') {
 #
 # GeoJSON出力
@@ -44,7 +25,11 @@ if ($mode === 'cat') {
 # 全国
 #
       $sql = <<<'EOS'
-SELECT id,name,lat,lon,1 AS c FROM geom
+SELECT id,s.name,lat,lon,1 AS c FROM geom
+JOIN (
+ SELECT id,group_concat(name ORDER BY type SEPARATOR '・') AS name
+ FROM sanmei WHERE type<=1 GROUP BY id
+) AS s USING (id)
 WHERE act>0
 EOS;
     } else if ($v == 1) {
@@ -52,28 +37,36 @@ EOS;
 # 山行記録のある山を抽出
 #
       $sql = <<<'EOS'
-SELECT id,name,lat,lon,1 AS c FROM geom
+SELECT id,s.name,lat,lon,1 AS c FROM geom
 JOIN (
  SELECT DISTINCT id FROM explored
  JOIN (
-  SELECT * FROM record
+  SELECT rec FROM record
   WHERE link IS NOT NULL
  ) AS r USING (rec)
 ) AS e USING (id)
+JOIN (
+ SELECT id,group_concat(name ORDER BY type SEPARATOR '・') AS name
+ FROM sanmei WHERE type<=1 GROUP BY id
+) AS s USING (id)
 EOS;
     } else if ($v == 2) {
 #
 # 山+山行記録数を抽出 ※0ではなくNULLが返る
 #
       $sql = <<<'EOS'
-SELECT id,name,lat,lon,c FROM geom
+SELECT id,s.name,lat,lon,c FROM geom
 LEFT JOIN (
  SELECT id,COUNT(rec) AS c FROM explored
  JOIN (
-  SELECT * FROM record
+  SELECT rec FROM record
   WHERE link IS NOT NULL
  ) AS r USING (rec) GROUP BY id
 ) AS e USING (id)
+JOIN (
+ SELECT id,group_concat(name ORDER BY type SEPARATOR '・') AS name
+ FROM sanmei WHERE type<=1 GROUP BY id
+) AS s USING (id)
 WHERE act>0
 EOS;
     }
@@ -85,7 +78,7 @@ EOS;
       $sql = <<<'EOS'
 SELECT id,m.name,lat,lon,1 AS c FROM geom
 JOIN (
- SELECT * FROM meizan
+ SELECT id,name FROM meizan
  WHERE cat=?
 ) AS m USING (id)
 EOS;
@@ -96,13 +89,13 @@ EOS;
       $sql = <<<'EOS'
 SELECT id,m.name,lat,lon,1 AS c FROM geom
 JOIN (
- SELECT * FROM meizan
+ SELECT id,name FROM meizan
  WHERE cat=?
 ) AS m USING (id)
 JOIN (
  SELECT DISTINCT id FROM explored
  JOIN (
-  SELECT * FROM record
+  SELECT rec FROM record
   WHERE link IS NOT NULL
  ) AS r USING (rec)
 ) AS e USING (id)
@@ -114,13 +107,13 @@ EOS;
       $sql = <<<'EOS'
 SELECT id,m.name,lat,lon,c FROM geom
 JOIN (
- SELECT * FROM meizan
+ SELECT id,name FROM meizan
  WHERE cat=?
 ) AS m USING (id)
 LEFT JOIN (
  SELECT id,COUNT(rec) AS c FROM explored
  JOIN (
-  SELECT * FROM record
+  SELECT rec FROM record
   WHERE link IS NOT NULL
  ) AS r USING (rec) GROUP BY id
 ) AS e USING (id)
@@ -132,7 +125,7 @@ EOS;
     $sth->bindValue(1, $val, PDO::PARAM_INT); # 名山カテゴリ
   }
   $sth->execute();
-  header('Content-type: application/geo+json; charset=UTF-8');
+  header('Content-Type: application/geo+json; charset=UTF-8');
   header('Cache-Control: no-store, max-age=0');
   echo '{"type":"FeatureCollection","features":[', PHP_EOL;
   $count = 0;
@@ -142,10 +135,6 @@ EOS;
     }
     $id = $row->id;
     $name = $row->name;
-    # cat=0 の場合、総称があれば付加
-    if ($val == 0 && isset($g_name[$id])) {
-      $name = $g_name[$id] . '・' . $name;
-    }
     $c = $row->c ? 1 : 0;
     $lat = $row->lat;
     $lon = $row->lon;
@@ -212,7 +201,7 @@ EOS;
     }
     $sth = null;
   }
-  header('Content-type: application/json; charset=UTF-8');
+  header('Content-Type: application/json; charset=UTF-8');
   header('Cache-Control: no-store, max-age=0');
   echo json_encode($output, JSON_UNESCAPED_UNICODE), PHP_EOL;
 } elseif ($mode != 'end') {
@@ -229,7 +218,7 @@ EOS;
     $sql = <<<'EOS'
 SELECT id,m.kana,m.name,alt,lat,lon FROM geom
 JOIN (
- SELECT * FROM meizan
+ SELECT id,kana,name FROM meizan
  WHERE cat=?
 ) AS m USING(id)
 WHERE id=?
@@ -243,7 +232,13 @@ EOS;
 # ID/REC検索
 #
       $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon FROM geom
+SELECT id,s.kana,s.name,alt,lat,lon FROM geom
+JOIN (
+ SELECT id,
+  group_concat(kana ORDER BY type SEPARATOR '・') AS kana,
+  group_concat(name ORDER BY type SEPARATOR '・') AS name
+ FROM sanmei WHERE type<=1 GROUP BY id
+) AS s USING (id)
 WHERE act>0 AND id=?
 EOS;
       $sth = $dbh->prepare($sql);
@@ -253,7 +248,13 @@ EOS;
 # 最新の登録
 #
       $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon FROM geom
+SELECT id,s.kana,s.name,alt,lat,lon FROM geom
+JOIN (
+ SELECT id,
+  group_concat(kana ORDER BY type SEPARATOR '・') AS kana,
+  group_concat(name ORDER BY type SEPARATOR '・') AS name
+ FROM sanmei WHERE type<=1 GROUP BY id
+) AS s USING (id)
 WHERE act>0
 ORDER BY id DESC
 LIMIT 100
@@ -276,16 +277,22 @@ EOS;
 # 山名＋所在地検索
 #
       $sql = <<<EOS
-SELECT DISTINCT id,geom.kana,geom.name,alt,lat,lon FROM geom
+SELECT DISTINCT id,s.kana,s.name,alt,lat,lon FROM geom
 JOIN (
- SELECT * FROM sanmei
+ SELECT id FROM sanmei
  WHERE name$eq?
-) AS s USING(id)
+) AS m USING(id)
 JOIN (
- SELECT * FROM location
+ SELECT id FROM location
  JOIN city USING (code)
  WHERE name LIKE ?
 ) AS g USING (id)
+JOIN (
+ SELECT id,
+  group_concat(kana ORDER BY type SEPARATOR '・') AS kana,
+  group_concat(name ORDER BY type SEPARATOR '・') AS name
+ FROM sanmei WHERE type<=1 GROUP BY id
+) AS s USING (id)
 ORDER BY alt DESC
 LIMIT 1000
 EOS;
@@ -297,11 +304,17 @@ EOS;
 # 山名検索
 #
       $sql = <<<EOS
-SELECT DISTINCT id,geom.kana,geom.name,alt,lat,lon FROM geom
+SELECT DISTINCT id,s.kana,s.name,alt,lat,lon FROM geom
 JOIN (
- SELECT * FROM sanmei
+ SELECT id FROM sanmei
  WHERE name$eq?
-) AS s USING(id)
+) AS m USING(id)
+JOIN (
+ SELECT id,
+  group_concat(kana ORDER BY type SEPARATOR '・') AS kana,
+  group_concat(name ORDER BY type SEPARATOR '・') AS name
+ FROM sanmei WHERE type<=1 GROUP BY id
+) AS s USING (id)
 ORDER BY alt DESC
 LIMIT 1000
 EOS;
@@ -314,11 +327,6 @@ EOS;
     $id = $row->id;
     $name = $row->name;
     $kana = $row->kana;
-    # 「名山カテゴリを指定してREC検索」以外は総称があれば付加
-    if (!($mode === 'rec' && $c > 0) && isset($g_name[$id])) {
-      $name = $g_name[$id] . '・' . $name;
-      $kana = $g_kana[$id] . '・' . $kana;
-    }
     $geo[] = array(
       'id' => $id,
       'kana' => $kana,
@@ -375,7 +383,7 @@ EOS;
     $sql = <<<'EOS'
 SELECT link,start,end,title,summary,image FROM record
 JOIN (
- SELECT * FROM explored
+ SELECT rec FROM explored
  WHERE id=?
 ) AS e USING (rec)
 WHERE link IS NOT NULL
@@ -397,7 +405,7 @@ EOS;
     $sth = null;
   }
   $output = array('geo' => $geo, 'rec' => $rec);
-  header('Content-type: application/json; charset=UTF-8');
+  header('Content-Type: application/json; charset=UTF-8');
   header('Cache-Control: no-store, max-age=0');
   echo json_encode($output, JSON_UNESCAPED_UNICODE), PHP_EOL;
 }
