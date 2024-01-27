@@ -17,15 +17,15 @@
     <div id="map">
       <div id="toolbar" class="bar ol-unselectable">
         <h1>山名一覧 on the Web地図</h1>
-        <div>
-          <button type="button" title="メニュー" onclick="toggle('menu')"><span class="one">≡</span></button>
+        <div id="menu1">
+          <button type="button" title="メニュー" onclick="toggle('menu2')"><span class="one">≡</span></button>
           <button type="button" title="中心座標" onclick="openPopupCenter()"><span class="one">⌖</span></button>
           <select id="tb-base" title="マップ"></select>
           <select id="tb-zoom" title="ズーム"></select>
           <button type="button" title="ヘルプとクレジット" onclick="window.open('mountain/help.html')"><span class="one">ⓘ</span></button>
           <button type="button" class="navi"></button>
         </div>
-        <div id="menu" style="display:none;">
+        <div id="menu2" style="display:none;">
           <input type="checkbox" onchange="switchSanmei(this.checked)" checked>
           <span>山名</span>
           <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
