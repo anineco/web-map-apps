@@ -294,27 +294,16 @@ function openPopup(coordinate) {
     fetch(dburl + '?rgc=1&lon=' + lon + '&lat=' + lat)
     .then(response => response.json())
     .then(function (json) {
-      result.address = json.length ? json[0].name : 'unknown';
+      result.address = json.length ? json.map(i => i.name) : 'unknown';
       resolve();
     })
   ));
-/*****
-  sources.push(new Promise((resolve) =>
-    fetch(dburl + '?zu=1&lon=' + lon + '&lat=' + lat)
-    .then(response => response.json())
-    .then(function (json) {
-      result.zumei = json.length ? json[0].name : 'unknown';
-      resolve();
-    })
-  ));
-*****/
   Promise.all(sources).then(() => {
     popup.show(coordinate,
       '<h2>現在地</h2><table><tbody><tr><td>標高</td><td>' + result.alt
       + 'm<tr><td>緯度</td><td>' + result.lat
       + '</td></tr><tr><td>経度</td><td>' + result.lon
-      + '</td></tr><tr><td>所在</td><td>' + result.address
-//    + '</td></tr><tr><td>図名</td><td>' + result.zumei
+      + '</td></tr><tr><td>所在</td><td>' + result.address.join('<br>')
       + '</td></tr></tbody></table>'
     );
   });
