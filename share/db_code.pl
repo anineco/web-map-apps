@@ -15,7 +15,7 @@ my $dbh = DBI->connect($dsn, undef, undef, {mysql_enable_utf8mb4 => 1}) or die $
 my $sth1 = $dbh->prepare(<<'EOS');
 SELECT id,name FROM geom
 LEFT JOIN location USING(id)
-WHERE act>0 AND code IS NULL
+WHERE code IS NULL
 EOS
 
 my $sth2 = $dbh->prepare(<<'EOS');

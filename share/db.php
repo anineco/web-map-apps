@@ -27,7 +27,6 @@ if ($mode === 'cat') {
       $sql = <<<'EOS'
 SELECT id,s.name,lat,lon,1 AS c FROM geom
 JOIN sosho AS s USING (id)
-WHERE act>0
 EOS;
     } else if ($v == 1) {
 #
@@ -58,7 +57,6 @@ LEFT JOIN (
   WHERE link IS NOT NULL
  ) AS r USING (rec) GROUP BY id
 ) AS e USING (id)
-WHERE act>0
 EOS;
     }
   } else {
@@ -225,7 +223,7 @@ EOS;
       $sql = <<<'EOS'
 SELECT id,s.kana,s.name,alt,lat,lon FROM geom
 JOIN sosho AS s USING (id)
-WHERE act>0 AND id=?
+WHERE id=?
 EOS;
       $sth = $dbh->prepare($sql);
       $sth->bindValue(1, $val, PDO::PARAM_INT);
@@ -236,7 +234,6 @@ EOS;
       $sql = <<<'EOS'
 SELECT id,s.kana,s.name,alt,lat,lon FROM geom
 JOIN sosho AS s USING (id)
-WHERE act>0
 ORDER BY id DESC
 LIMIT 100
 EOS;
