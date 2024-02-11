@@ -136,7 +136,7 @@ const map = new Map({
     new ScaleLine(),
     new Control({ element: document.getElementById('toolbar') }),
     new Control({ element: document.getElementById('searchbar') }),
-    new Control({ element: document.getElementById('crosshair') })
+    new Control({ element: document.getElementById('centercross') })
   ])
 });
 
@@ -244,16 +244,17 @@ function fromStringYX(s) {
 const popup = new Popup();
 map.addOverlay(popup);
 
+const apiurl = 'https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php';
+
 function openPopup(coordinate) {
   const lon_lat = toLonLat(coordinate);
   const lon = lon_lat[0].toFixed(6);
   const lat = lon_lat[1].toFixed(6);
   const result = {
-    lon: formatDEG(lon_lat[0]),
-    lat: formatDEG(lon_lat[1])
+    lon: lon_lat[0],
+    lat: lon_lat[1]
   };
   const sources = [];
-  const apiurl = 'https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php';
   sources.push(new Promise((resolve) =>
     fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
     .then(response => response.json())
@@ -266,27 +267,16 @@ function openPopup(coordinate) {
     fetch(dburl + '?rgc=1&lon=' + lon + '&lat=' + lat)
     .then(response => response.json())
     .then(function (json) {
-      result.address = json.length ? json[0].name : 'unknown';
+      result.address = json.length ? json.map(i => i.name) : 'unknown';
       resolve();
     })
   ));
-/*****
-  sources.push(new Promise((resolve) =>
-    fetch(dburl + '?zu=1&lon=' + lon + '&lat=' + lat)
-    .then(response => response.json())
-    .then(function (json) {
-      result.zumei = json.length ? json[0].name : 'unknown';
-      resolve();
-    })
-  ));
-*****/
   Promise.all(sources).then(() => {
     popup.show(coordinate,
       '<h2>現在地</h2><table><tbody><tr><td>標高</td><td>' + result.alt
-      + 'm<tr><td>緯度</td><td>' + result.lat
-      + '</td></tr><tr><td>経度</td><td>' + result.lon
-      + '</td></tr><tr><td>所在</td><td>' + result.address
-//    + '</td></tr><tr><td>図名</td><td>' + result.zumei
+      + 'm<tr><td>緯度</td><td>' + formatDEG(result.lat)
+      + '</td></tr><tr><td>経度</td><td>' + formatDEG(result.lon)
+      + '</td></tr><tr><td>所在</td><td>' + result.address.join('<br>')
       + '</td></tr></tbody></table>'
     );
   });
@@ -294,6 +284,75 @@ function openPopup(coordinate) {
 
 window.openPopupCenter = () => { openPopup(view.getCenter()); };
 window.switchSanmei = (visible) => { sanmei.setVisible(visible); };
+
+window.openPanel = () => {
+  const dialog = document.getElementById('dialog');
+  const menu = document.getElementById('menu3');
+  if (dialog.style.display !== 'none') {
+    // ログイン画面を閉じる
+    dialog.style.display = 'none';
+  } else if (menu.style.display !== 'none') {
+    // ログアウト処理
+    fetch('share/logout.php')
+    .then(response => response.text())
+    .then(function (text) {
+      if (text === 'SUCCESS') {
+        alert('ログアウトしました');
+      }
+      menu.style.display = 'none';
+    });
+  } else {
+    // ログイン中か確認する
+    fetch('share/login.php')
+    .then(response => response.text())
+    .then(function (text) {
+      if (text === 'SUCCESS') {
+        menu.style.display = 'block';
+        dialog.style.display = 'none';
+      } else {
+        menu.style.display = 'none';
+        dialog.style.display = 'block';
+      }
+    });
+  }
+};
+
+const panel = document.forms['panel'];
+
+window.readPos = (init) => {
+  const lon_lat = toLonLat(view.getCenter());
+  const lon = lon_lat[0].toFixed(6);
+  const lat = lon_lat[1].toFixed(6);
+  if (init) {
+    panel.id.value =  0;
+    panel.name.value = '';
+    panel.kana.value = '';
+  }
+  panel.lat.value = lon_lat[1];
+  panel.lon.value = lon_lat[0];
+  panel.y.value = formatDEG(lon_lat[1]);
+  panel.x.value = formatDEG(lon_lat[0]);
+  fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
+  .then(response => response.json())
+  .then(function (json) {
+    panel.alt.value = parseInt(json.elevation + 0.5);
+  });
+};
+
+window.confirmPos = () => {
+  if (panel.lon.value && panel.lat.value) {
+    const coordinate = fromLonLat([panel.lon.value, panel.lat.value]);
+    popup.show(coordinate,
+      '<h2>' + (panel.name.value || '未設定')
+      + '</h2><table><tbody><tr><td>よみ</td><td>' + (panel.kana.value || '未設定')
+      + '</td></tr><tr><td>標高</td><td>' + panel.alt.value
+      + 'm</td></tr><tr><td>緯度</td><td>' + panel.y.value
+      + '</td></tr><tr><td>経度</td><td>' + panel.x.value
+      + '</td></tr><tr><td>ID</td><td>' + (panel.id.value || '新規')
+      + '</td></tr></tbody></table>'
+    );
+  }
+};
 
 const result = document.getElementById('result');
 const count = document.getElementById('count');
@@ -306,11 +365,7 @@ function query(s) {
   }
   count.textContent = '検索中';
   result.style.display = 'block';
-  fetch(dburl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: 'q=' + encodeURIComponent(s)
-  })
+  fetch(dburl + '?q=' + encodeURIComponent(s))
   .then(response => response.json())
   .then(function (json) {
     result_json = json;
@@ -338,6 +393,15 @@ function openPopupId(id, centering) {
   .then(response => response.json())
   .then(function (json) {
     const geo = json.geo[0];
+    panel.id.value = geo.id;
+    panel.alt.value = geo.alt;
+    panel.y.value = formatDEG(geo.lat);
+    panel.x.value = formatDEG(geo.lon);
+    panel.lat.value = geo.lat;
+    panel.lon.value = geo.lon;
+    panel.name.value = geo.name;
+    panel.kana.value = geo.kana;
+
     const coordinate = fromLonLat([geo.lon, geo.lat]);
     popup.show(coordinate,
       '<h2>' + geo.name
@@ -347,11 +411,10 @@ function openPopupId(id, centering) {
             alias => '<ruby>' + alias.name + '<rt>' + alias.kana + '</rt></ruby>'
           ).join('<br>') : '')
       + '</td></tr><tr><td>標高</td><td>' + geo.alt
-      + 'm</td></tr><tr><td>緯度</td><td>' + formatDEG(geo.lat)
-      + '</td></tr><tr><td>経度</td><td>' + formatDEG(geo.lon)
+      + 'm</td></tr><tr><td>緯度</td><td>' + panel.y.value
+      + '</td></tr><tr><td>経度</td><td>' + panel.x.value
       + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
-      + '</td></tr><tr><td>ID</td><td>'
-      + '<span data-auth="' + geo.auth + '">' + geo.id + '</span>'
+      + '</td></tr><tr><td>ID</td><td>' + geo.id
       + '</td></tr></tbody></table>'
     );
     if (centering) {
@@ -360,8 +423,43 @@ function openPopupId(id, centering) {
   });
 }
 
+document.forms['login'].addEventListener('submit', function (event) {
+  console.log(event.submitter);
+  // ログイン処理
+  const form = event.target;
+  fetch(form.getAttribute('action'), {
+    method: form.getAttribute('method'),
+    body: new FormData(form)
+  })
+  .then(response => response.text())
+  .then(function (text) {
+    if (text === 'SUCCESS') {
+      alert('ログインしました');
+      document.getElementById('dialog').style.display = 'none';
+      document.getElementById('menu3').style.display = 'block';
+    } else {
+      alert('ログインに失敗しました');
+    }
+  });
+  event.preventDefault();
+});
+
+document.forms['panel'].addEventListener('submit', function (event) {
+  const form = event.target;
+  fetch(form.getAttribute('action'), {
+    method: form.getAttribute('method'),
+    body: new FormData(form)
+  })
+  .then(response => response.text())
+  .then(function (text) {
+    alert(text);
+  });
+  event.preventDefault();
+});
+
 document.forms['form1'].addEventListener('submit', function (event) {
-  const s = event.target.elements['query'].value;
+  const form = event.target;
+  const s = form.elements['query'].value;
   const lon_lat = fromStringYX(s);
   if (lon_lat) {
     view.setCenter(fromLonLat(lon_lat));
@@ -369,7 +467,7 @@ document.forms['form1'].addEventListener('submit', function (event) {
     query(s);
   }
   event.preventDefault();
-}, false);
+});
 
 document.forms['form2'].addEventListener('submit', function (event) {
   const csv = 'ID,山名,よみ,標高,緯度,経度,備考\n' + result_json.geo.map(x => [
@@ -406,8 +504,8 @@ map.on('pointermove', function (evt) {
   map.getTargetElement().style.cursor = found ? 'pointer' : '';
 });
 
-window.addEventListener('DOMContentLoaded', function () {
-  for (const element of document.querySelectorAll('button.navi')) {
+window.addEventListener('DOMContentLoaded', function (_event) {
+  for (const element of document.querySelectorAll('#menu1 button:last-child')) {
     if (window.opener) {
       element.innerHTML = '<span class="one">✖︎</span>';
       element.addEventListener('click', () => window.close());

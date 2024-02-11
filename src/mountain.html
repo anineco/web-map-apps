@@ -23,21 +23,70 @@
           <select id="tb-base" title="マップ"></select>
           <select id="tb-zoom" title="ズーム"></select>
           <button type="button" title="ヘルプとクレジット" onclick="window.open('mountain/help.html')"><span class="one">ⓘ</span></button>
+          <button type="button" title="新規登録・修正" onclick="openPanel()">管理</button>
           <button type="button" class="navi"></button>
         </div>
         <div id="menu2" style="display:none;">
           <input type="checkbox" onchange="switchSanmei(this.checked)" checked>
           <span>山名</span>
-          <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
+          <input type="checkbox" onchange="switchElement('centercross', this.checked)" checked>
           <span>中心十字</span>
         </div>
+        <div id="dialog" style="display:none;">
+          <div>
+            <form name="login" action="share/login.php" method="POST">
+              <table>
+                <tr>
+                  <td>ユーザー名</td>
+                  <td><input name="username" style="width:9rem;"></td>
+                  <td rowspan="2"><button name="send">送信</button></td>
+                </tr>
+                <tr>
+                  <td>パスワード</td>
+                  <td><input type="password" name="password" style="width:9rem;"></td>
+                </tr>
+              </table>
+            </form>
+          </div>
+        </div>
+        <div id="menu3" style="display:none;">
+          <form name="panel" action="share/db.php" method="POST">
+            <table style="width:100%;">
+              <tr>
+                <td>ID</td>
+                <td><input name="id" style="width:4.5rem;" readonly></td>
+                <td>標高</td>
+                <td><input name="alt" style="width:5rem;" required></td>
+                <td><button type="button" onclick="readPos(true)">新規</button></td>
+              </tr>
+              <tr>
+                <td>緯度</td>
+                <td><input name="y" style="width:4.5rem;" readonly><input name="lat" type="hidden"></td>
+                <td>経度</td>
+                <td><input name="x" style="width:5rem;" readonly><input name="lon" type="hidden"></td>
+                </td>
+                <td><button type="button" onclick="readPos(false)">読取</button></td>
+              </tr>
+              <tr>
+                <td>山名</td>
+                <td colspan="3"><input name="name" style="width:12.5rem;" required></td>
+                <td><button type="button" onclick="confirmPos()">確認</button></td>
+              </tr>
+              <tr>
+                <td>よみ</td>
+                <td colspan="3"><input name="kana" style="width:12.5rem;" required></td>
+                <td><button>登録</button></td>
+              </tr>
+            </table>
+          </form>
+        </div><!-- #menu3 -->
       </div><!-- #toolbar -->
-      <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
+      <div id="centercross" class="ol-unselectable"><!-- share/crosshair.gif -->
         <img src="data:image/gif;base64,R0lGODlhGAAYAPAAAICAgAAAACH5BAEAAAEAIf8LSW1hZ2VNYWdpY2sOZ2FtbWE9MC40NTQ1NDUALAAAAAAYABgAAAIxjI+puwAMk4s0zAovbm9z/4FSJ5Ym4qSpcakq67ZdrJ02WJe5uOOk2fMEN0NM8XYoAAA7" width="24" height="24" alt="">
       </div>
       <div id="searchbar" class="bar ol-unselectable">
         <div>
-          <form action="" name="form1" accept-charset="UTF-8">
+          <form name="form1" action="">
             <label>山名</label>
             <input type="search" id="query" value="">
             <button>検索</button>
@@ -45,7 +94,7 @@
           </form>
         </div>
         <div id="result" style="display:none;">
-          <form action="" name="form2" accept-charset="UTF-8">
+          <form name="form2" action="">
             <label>検索結果：<span id="count"></span></label>
             <button>保存</button>
           </form>

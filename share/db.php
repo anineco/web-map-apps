@@ -1,13 +1,74 @@
 <?php
+session_start();
 $cf = parse_ini_file('/home/anineco/.my.cnf'); # 🔖 設定ファイル
 $dsn = "mysql:host=$cf[host];dbname=$cf[database];charset=utf8mb4";
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 
-$type = !empty($_POST) ? INPUT_POST : INPUT_GET;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if (!isset($_SESSION['username'])) {
+    $dbh = null;
+    http_response_code(403); # Forbidden
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'FAILURE';
+    exit;
+  }
+  $id = filter_input(INPUT_POST, 'id');
+  $alt = filter_input(INPUT_POST, 'alt');
+  $lat = filter_input(INPUT_POST, 'lat');
+  $lon = filter_input(INPUT_POST, 'lon');
+  $name = filter_input(INPUT_POST, 'name');
+  $kana = filter_input(INPUT_POST, 'kana');
+  $pt = "POINT($lon $lat)";
+  if ($id > 0) { # 更新
+    $sql = <<<'EOS'
+UPDATE geom
+SET alt=?,pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */),name=?,kana=?
+WHERE id=?
+EOS;
+    $sth = $dbh->prepare($sql);
+    $sth->bindValue(1, $alt, PDO::PARAM_INT);
+    $sth->bindValue(2, $pt);
+    $sth->bindValue(3, $name);
+    $sth->bindValue(4, $kana);
+    $sth->bindValue(5, $id, PDO::PARAM_INT);
+    $ret = $sth->execute();
+    $sth = null;
+  } else { # 新規登録
+    $sql = <<<'EOS'
+INSERT INTO geom (alt,pt,name,kana) VALUES
+(?,ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */),?,?)
+EOS;
+    $sth = $dbh->prepare($sql);
+    $sth->bindValue(1, $alt, PDO::PARAM_INT);
+    $sth->bindValue(2, $pt);
+    $sth->bindValue(3, $name);
+    $sth->bindValue(4, $kana);
+    $ret = $sth->execute();
+    $sth = null;
+    if ($ret) {
+      $sth = $dbh->query('SELECT LAST_INSERT_ID()');
+      $id = $sth->fetchAll(PDO::FETCH_COLUMN, 0)[0];
+      $sth = null;
+    }
+  }
+  if ($id > 0) {
+    $sth = $dbh->prepare('CALL complete_location(?)');
+    $sth->bindValue(1, $id, PDO::PARAM_INT);
+    $sth->execute();
+    $sth = null;
+  }
+  $dbh = null;
+  header('Content-Type: text/plain; charset=UTF-8');
+  echo $ret ? 'SUCCESS' : 'FAILURE';
+  exit;
+}
+#
+# データを取得する
+#
 $mode = 'end';
 $val = null;
 foreach (array('cat', 'id', 'rec', 'rgc', 'zu', 'q') as $i) {
-  $val = filter_input($type, $i);
+  $val = filter_input(INPUT_GET, $i);
   if (isset($val)) {
     $mode = $i;
     break;
@@ -18,23 +79,21 @@ if ($mode === 'cat') {
 #
 # GeoJSON出力
 #
-  $v = filter_input($type, 'v');
+  $v = filter_input(INPUT_GET, 'v');
   if ($val == 0) {
     if ($v == 0) {
 #
 # 全国
 #
       $sql = <<<'EOS'
-SELECT id,s.name,lat,lon,1 AS c FROM geom
-JOIN sosho AS s USING (id)
+SELECT id,name,lat,lon,1 AS c FROM geom
 EOS;
     } else if ($v == 1) {
 #
 # 山行記録のある山を抽出
 #
       $sql = <<<'EOS'
-SELECT id,s.name,lat,lon,1 AS c FROM geom
-JOIN sosho AS s USING (id)
+SELECT id,name,lat,lon,1 AS c FROM geom
 JOIN (
  SELECT DISTINCT id FROM explored
  JOIN (
@@ -48,8 +107,7 @@ EOS;
 # 山+山行記録数を抽出 ※0ではなくNULLが返る
 #
       $sql = <<<'EOS'
-SELECT id,s.name,lat,lon,c FROM geom
-JOIN sosho AS s USING (id)
+SELECT id,name,lat,lon,c FROM geom
 LEFT JOIN (
  SELECT id,COUNT(rec) AS c FROM explored
  JOIN (
@@ -139,8 +197,8 @@ EOS;
 #
 # 逆ジオコーディング
 #
-  $lon = filter_input($type, 'lon');
-  $lat = filter_input($type, 'lat');
+  $lon = filter_input(INPUT_GET, 'lon');
+  $lat = filter_input(INPUT_GET, 'lat');
   $wkt = "POINT($lon $lat)";
   $sql = <<<'EOS'
 SET @pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */)
@@ -157,7 +215,6 @@ EOS;
 SELECT code,name FROM gyosei
 LEFT JOIN city USING (code)
 WHERE ST_Contains(area,@pt)
-LIMIT 1
 EOS;
     $sth = $dbh->prepare($sql);
     $sth->execute();
@@ -197,7 +254,7 @@ EOS;
 #
 # JSON出力
 #
-  $c = filter_input($type, 'c');
+  $c = filter_input(INPUT_GET, 'c');
   $geo = array();
   $rec = array();
   if ($mode === 'rec' && $c > 0) {
@@ -221,8 +278,7 @@ EOS;
 # ID/REC検索
 #
       $sql = <<<'EOS'
-SELECT id,s.kana,s.name,alt,lat,lon FROM geom
-JOIN sosho AS s USING (id)
+SELECT id,kana,name,alt,lat,lon FROM geom
 WHERE id=?
 EOS;
       $sth = $dbh->prepare($sql);
@@ -232,8 +288,7 @@ EOS;
 # 最新の登録
 #
       $sql = <<<'EOS'
-SELECT id,s.kana,s.name,alt,lat,lon FROM geom
-JOIN sosho AS s USING (id)
+SELECT id,kana,name,alt,lat,lon FROM geom
 ORDER BY id DESC
 LIMIT 100
 EOS;
@@ -255,8 +310,7 @@ EOS;
 # 山名＋所在地検索
 #
       $sql = <<<EOS
-SELECT DISTINCT id,s.kana,s.name,alt,lat,lon FROM geom
-JOIN sosho AS s USING (id)
+SELECT DISTINCT id,kana,name,alt,lat,lon FROM geom
 JOIN (
  SELECT id FROM sanmei
  WHERE name$eq?
@@ -277,8 +331,7 @@ EOS;
 # 山名検索
 #
       $sql = <<<EOS
-SELECT DISTINCT id,s.kana,s.name,alt,lat,lon FROM geom
-JOIN sosho AS s USING (id)
+SELECT DISTINCT id,kana,name,alt,lat,lon FROM geom
 JOIN (
  SELECT id FROM sanmei
  WHERE name$eq?

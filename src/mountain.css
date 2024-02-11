@@ -14,7 +14,7 @@ body {
 #map {
   position: relative;
 }
-#crosshair {
+#centercross {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -51,7 +51,7 @@ div.bar > h1 {
   color: white;
   background: rgba(43,69,69,.9);
 }
-.bar button:last-child {
+#menu1 button:last-child {
   position: absolute;
   right: 8px;
 }
@@ -65,7 +65,7 @@ div.bar > h1 {
 .bar input,
 .bar button,
 .bar select {
-  margin: 2px 4px;
+  margin: 2px 3px;
   padding: 1px 4px;
   border: none;
   border-radius: 4px;
@@ -77,7 +77,7 @@ div.bar > h1 {
 .bar button {
   cursor: pointer;
 }
-.bar input[type="search"] {
+#searchbar input {
   width: 11rem;
 }
 button.navi {
@@ -124,7 +124,7 @@ button.navi a {
 }
 @media screen and (min-width: 865px) {
   #result > div {
-    max-height: calc(100vh - 350px);
+    max-height: calc(100vh - 480px);
   }
 }
 #result table,
