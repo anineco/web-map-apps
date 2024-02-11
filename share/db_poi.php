@@ -44,7 +44,7 @@ EOS;
     $sql = <<<'EOS'
 SELECT g.id,g.name,g.lat,g.lon FROM geom AS g
 LEFT JOIN poi AS p USING (id)
-WHERE g.act>0 AND p.id IS NULL
+WHERE p.id IS NULL
 EOS;
     $sth = $dbh->prepare($sql);
   } else {
@@ -53,7 +53,7 @@ EOS;
 SELECT id,name,lat,lon FROM geom
 JOIN (SELECT id,MAX(c) AS m FROM poi GROUP BY id) AS p
 USING (id)
-WHERE act>0 AND m=?
+WHERE m=?
 EOS;
     $sth = $dbh->prepare($sql);
     $sth->bindValue(1, $val & 3, PDO::PARAM_INT);
@@ -136,7 +136,7 @@ EOS;
       } else { # 山名一覧
         $sql = <<<'EOS'
 SELECT id,kana,name,alt,lat,lon FROM geom
-WHERE act>0 AND id=?
+WHERE id=?
 EOS;
       }
       $sth = $dbh->prepare($sql);
