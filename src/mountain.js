@@ -293,7 +293,7 @@ window.openPanel = () => {
     dialog.style.display = 'none';
   } else if (menu.style.display !== 'none') {
     // ログアウト処理
-    fetch('share/logout.php')
+    fetch(share + 'logout.php')
     .then(response => response.text())
     .then(function (text) {
       if (text === 'SUCCESS') {
@@ -303,7 +303,7 @@ window.openPanel = () => {
     });
   } else {
     // ログイン中か確認する
-    fetch('share/login.php')
+    fetch(share + 'login.php')
     .then(response => response.text())
     .then(function (text) {
       if (text === 'SUCCESS') {
@@ -427,8 +427,8 @@ document.forms['login'].addEventListener('submit', function (event) {
   console.log(event.submitter);
   // ログイン処理
   const form = event.target;
-  fetch(form.getAttribute('action'), {
-    method: form.getAttribute('method'),
+  fetch(share + 'login.php', {
+    method: 'POST',
     body: new FormData(form)
   })
   .then(response => response.text())
@@ -446,8 +446,8 @@ document.forms['login'].addEventListener('submit', function (event) {
 
 document.forms['panel'].addEventListener('submit', function (event) {
   const form = event.target;
-  fetch(form.getAttribute('action'), {
-    method: form.getAttribute('method'),
+  fetch(dburl, {
+    method: 'POST',
     body: new FormData(form)
   })
   .then(response => response.text())
