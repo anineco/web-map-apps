@@ -424,7 +424,6 @@ function openPopupId(id, centering) {
 }
 
 document.forms['login'].addEventListener('submit', function (event) {
-  console.log(event.submitter);
   // ログイン処理
   const form = event.target;
   fetch(share + 'login.php', {
@@ -453,6 +452,8 @@ document.forms['panel'].addEventListener('submit', function (event) {
   .then(response => response.text())
   .then(function (text) {
     alert(text);
+    popup.hide();
+    sanmei.getSource().refresh();
   });
   event.preventDefault();
 });
