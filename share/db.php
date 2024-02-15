@@ -269,7 +269,6 @@ EOS;
   $sth->bindValue(1, "POINT($lon $lat)");
   $sth->execute();
   $sth = null;
-  $output = array();
   if (isset($rgc)) {
 #
 # 都道府県＋市区町村
@@ -279,12 +278,6 @@ SELECT code,name FROM gyosei
 LEFT JOIN city USING (code)
 WHERE ST_Contains(area,@pt)
 EOS;
-    $sth = $dbh->prepare($sql);
-    $sth->execute();
-    while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-      $output[] = array('code' => $row['code'], 'name' => $row['name']);
-    }
-    $sth = null;
   } else {
 #
 # 地形図名
@@ -294,17 +287,10 @@ SELECT type,mapno,name FROM zumei
 WHERE ST_Contains(area,@pt)
 ORDER BY type DESC
 EOS;
-    $sth = $dbh->prepare($sql);
-    $sth->execute();
-    while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-      $output[] = array(
-        'type' => $row['type'],
-        'mapno' => $row['mapno'],
-        'name' => $row['name']
-      );
-    }
-    $sth = null;
   }
+  $sth = $dbh->query($sql);
+  $output = $sth->fetchAll(PDO::FETCH_ASSOC);
+  $sth = null;
   header('Content-Type: application/json; charset=UTF-8');
   header('Cache-Control: no-store, max-age=0');
   echo json_encode($output, JSON_UNESCAPED_UNICODE), PHP_EOL;
@@ -420,17 +406,7 @@ EOS;
   }
 }
 $sth->execute();
-$geo = array();
-while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-  $geo[] = array(
-    'id' => $row['id'],
-    'kana' => $row['kana'],
-    'name' => $row['name'],
-    'alt' => $row['alt'],
-    'lat' => $row['lat'],
-    'lon' => $row['lon']
-  );
-}
+$geo = $sth->fetchAll(PDO::FETCH_ASSOC);
 $sth = null;
 #
 # 追加情報
@@ -446,11 +422,7 @@ EOS;
   $sth = $dbh->prepare($sql);
   $sth->bindValue(1, $val, PDO::PARAM_INT);
   $sth->execute();
-  $alias = array();
-  while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-    $alias[] = array('kana' => $row['kana'], 'name' => $row['name']);
-  }
-  $geo[0]['alias'] = $alias;
+  $geo[0]['alias'] = $sth->fetchAll(PDO::FETCH_ASSOC);
   $sth = null;
 #
 # 所在地
@@ -463,12 +435,8 @@ EOS;
   $sth = $dbh->prepare($sql);
   $sth->bindValue(1, $val, PDO::PARAM_INT);
   $sth->execute();
-  $address = array();
-  while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-    $address[] = $row['name'];
-  }
+  $geo[0]['address'] = $sth->fetchAll(PDO::FETCH_COLUMN);
   $sth = null;
-  $geo[0]['address'] = $address;
 }
 
 $rec = array();
@@ -488,16 +456,7 @@ EOS;
   $sth = $dbh->prepare($sql);
   $sth->bindValue(1, $val, PDO::PARAM_INT);
   $sth->execute();
-  while ($row = $sth->fetch(PDO::FETCH_ASSOC)) {
-    $rec[] = array(
-      'link' => $row['link'],
-      'start' => $row['start'],
-      'end' => $row['end'],
-      'title' => $row['title'],
-      'summary' => $row['summary'],
-      'image' => $row['image']
-    );
-  }
+  $rec = $sth->fetchAll(PDO::FETCH_ASSOC);
   $sth = null;
 }
 $output = array('geo' => $geo, 'rec' => $rec);
