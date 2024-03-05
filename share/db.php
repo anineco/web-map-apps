@@ -45,7 +45,7 @@ EOS;
     $sth->bindValue(3, $name);
     $sth->bindValue(4, $kana);
     $sth->bindValue(5, $id, PDO::PARAM_INT);
-    $ret = $sth->execute();
+    $sth->execute();
     $sth = null;
   } else {
 #
@@ -71,7 +71,7 @@ EOS;
   #
   # sanmei 更新
   #
-  $sth = $dbh->prepare('DELETE FROM sanmei WHERE id=? AND type<=2');
+  $sth = $dbh->prepare('DELETE FROM sanmei WHERE id=? AND type<2');
   $sth->bindValue(1, $id, PDO::PARAM_INT);
   $sth->execute();
   $sth = null;
@@ -138,8 +138,9 @@ if (isset($cat)) {
 # GeoJSON出力
 #
   $v = filter_input(INPUT_GET, 'v', FILTER_VALIDATE_INT);
-  if (!$cat) {
-    if (!$v) {
+  $sql = null;
+  if ($cat == 0) {
+    if ($v == 0) {
 #
 # 全国
 #
@@ -173,7 +174,7 @@ GROUP BY id
 EOS;
     }
   } else {
-    if (!$v) {
+    if ($v == 0) {
 #
 # 名山カテゴリを指定して抽出
 #
@@ -219,6 +220,11 @@ GROUP BY id
 EOS;
     }
   }
+  if (!isset($sql)) {
+    http_response_code(400); # Bad Request
+    $dbh = null;
+    exit;
+  }
   $sth = $dbh->prepare($sql);
   if ($cat > 0) {
     $sth->bindValue(1, $cat, PDO::PARAM_INT); # 名山カテゴリ
@@ -238,7 +244,10 @@ EOS;
 EOS;
     $count++;
   }
-  echo PHP_EOL, ']}', PHP_EOL;
+  if ($count > 0) {
+    echo PHP_EOL;
+  }
+  echo ']}', PHP_EOL;
   $sth = null;
   $dbh = null;
   exit;
