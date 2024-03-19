@@ -51,7 +51,8 @@ div.bar > h1 {
   color: white;
   background: rgba(43,69,69,.9);
 }
-#menu1 button:last-child {
+#menu1 button:last-child,
+#searchbar form button:last-child {
   position: absolute;
   right: 8px;
 }
