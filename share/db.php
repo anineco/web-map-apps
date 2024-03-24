@@ -10,25 +10,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 #
   if (!isset($_SESSION['username'])) {
     http_response_code(403); # Forbidden
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo 'Forbidden';
     $dbh = null;
     exit;
   }
   $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
   $alt = filter_input(INPUT_POST, 'alt', FILTER_VALIDATE_INT);
+  $auth = filter_input(INPUT_POST, 'auth', FILTER_VALIDATE_INT);
   $lat = filter_input(INPUT_POST, 'lat', FILTER_VALIDATE_FLOAT, [
     'options' => [ 'min_range' => -90, 'max_range' => 90 ]
   ]);
   $lon = filter_input(INPUT_POST, 'lon', FILTER_VALIDATE_FLOAT, [
     'options' => [ 'min_range' => -180, 'max_range' => 180 ]
   ]);
-  $name = filter_input(INPUT_POST, 'name');
-  $kana = filter_input(INPUT_POST, 'kana');
-  foreach (array($id, $alt, $lat, $lon, $name, $kana) as $v) {
+  foreach (array($id, $alt, $auth, $lat, $lon) as $v) {
     if (is_null($v) || $v === false) {
       http_response_code(400); # Bad Request
       $dbh = null;
       exit;
     }
+  }
+  $name = filter_input(INPUT_POST, 'name');
+  $kana = filter_input(INPUT_POST, 'kana');
+  if (empty($name) || empty($name)) {
+    http_response_code(400); # Bad Request
+    $dbh = null;
+    exit;
   }
   if ($id > 0) {
 #
@@ -36,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 #
     $sql = <<<'EOS'
 UPDATE geom
-SET alt=?,pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */),name=?,kana=?
+SET alt=?,pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */),name=?,kana=?,auth=?
 WHERE id=?
 EOS;
     $sth = $dbh->prepare($sql);
@@ -44,7 +52,8 @@ EOS;
     $sth->bindValue(2, "POINT($lon $lat)");
     $sth->bindValue(3, $name);
     $sth->bindValue(4, $kana);
-    $sth->bindValue(5, $id, PDO::PARAM_INT);
+    $sth->bindValue(5, $auth, PDO::PARAM_INT);
+    $sth->bindValue(6, $id, PDO::PARAM_INT);
     $sth->execute();
     $sth = null;
   } else {
@@ -52,14 +61,15 @@ EOS;
 # 新規登録
 #
     $sql = <<<'EOS'
-INSERT INTO geom (alt,pt,name,kana) VALUES
-(?,ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */),?,?)
+INSERT INTO geom (alt,pt,name,kana,auth) VALUES
+(?,ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */),?,?,?)
 EOS;
     $sth = $dbh->prepare($sql);
     $sth->bindValue(1, $alt, PDO::PARAM_INT);
     $sth->bindValue(2, "POINT($lon $lat)");
     $sth->bindValue(3, $name);
     $sth->bindValue(4, $kana);
+    $sth->bindValue(5, $auth, PDO::PARAM_INT);
     $sth->execute();
     $sth = null;
 
@@ -71,7 +81,7 @@ EOS;
   #
   # sanmei 更新
   #
-  $sth = $dbh->prepare('DELETE FROM sanmei WHERE id=? AND type<2');
+  $sth = $dbh->prepare('DELETE FROM sanmei WHERE id=?');
   $sth->bindValue(1, $id, PDO::PARAM_INT);
   $sth->execute();
   $sth = null;
@@ -97,6 +107,20 @@ EOS;
   $sth->bindValue(3, $name);
   $sth->execute();
   $sth = null;
+
+  # 別名
+  for ($i = 0; $i < 3; $i++) {
+    $kana = filter_input(INPUT_POST, "kana$i");
+    $name = filter_input(INPUT_POST, "name$i");
+    if ($kana && $name) {
+      $sth = $dbh->prepare('INSERT INTO sanmei VALUES (?,2,?,?)');
+      $sth->bindValue(1, $id, PDO::PARAM_INT);
+      $sth->bindValue(2, $kana);
+      $sth->bindValue(3, $name);
+      $sth->execute();
+      $sth = null;
+    }
+  }
 
   #
   # location 更新
@@ -332,7 +356,7 @@ if ($mode == 'rec' && $c > 0) {
 # 名山カテゴリを指定してREC検索
 #
   $sql = <<<'EOS'
-SELECT id,m.kana,m.name,alt,lat,lon FROM geom
+SELECT id,m.kana,m.name,alt,lat,lon,auth FROM geom
 JOIN (
  SELECT id,kana,name FROM meizan
  WHERE cat=?
@@ -348,7 +372,7 @@ EOS;
 # ID/REC検索
 #
     $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon FROM geom
+SELECT id,kana,name,alt,lat,lon,auth FROM geom
 WHERE id=?
 EOS;
     $sth = $dbh->prepare($sql);
@@ -358,7 +382,7 @@ EOS;
 # 最新の登録
 #
     $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon FROM geom
+SELECT id,kana,name,alt,lat,lon,auth FROM geom
 ORDER BY id DESC
 LIMIT 100
 EOS;
@@ -381,7 +405,7 @@ EOS;
 # 山名＋所在地検索
 #
     $sql = <<<EOS
-SELECT DISTINCT id,kana,name,alt,lat,lon FROM geom
+SELECT DISTINCT id,kana,name,alt,lat,lon,auth FROM geom
 JOIN (
  SELECT id FROM sanmei
  WHERE name$eq?
@@ -402,7 +426,7 @@ EOS;
 # 山名検索
 #
     $sql = <<<EOS
-SELECT DISTINCT id,kana,name,alt,lat,lon FROM geom
+SELECT DISTINCT id,kana,name,alt,lat,lon,auth FROM geom
 JOIN (
  SELECT id FROM sanmei
  WHERE name$eq?

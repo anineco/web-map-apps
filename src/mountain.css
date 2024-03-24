@@ -52,6 +52,7 @@ div.bar > h1 {
   background: rgba(43,69,69,.9);
 }
 #menu1 button:last-child,
+#menu2 button:last-child,
 #searchbar form button:last-child {
   position: absolute;
   right: 8px;
@@ -78,8 +79,15 @@ div.bar > h1 {
 .bar button {
   cursor: pointer;
 }
+label,
+button {
+  text-wrap: nowrap;
+}
 #searchbar input {
   width: 11rem;
+}
+input:read-only {
+  color: gray;
 }
 button.navi {
   background-color: #fc9;
@@ -127,6 +135,12 @@ button.navi a {
   #result > div {
     max-height: calc(100vh - 480px);
   }
+}
+#menu3 table,
+#menu3 th,
+#menu3 td {
+  border-style: none;
+  border-collapse: collapse;
 }
 #result table,
 #result th,

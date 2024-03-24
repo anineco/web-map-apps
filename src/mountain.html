@@ -23,7 +23,6 @@
           <select id="tb-base" title="マップ"></select>
           <select id="tb-zoom" title="ズーム"></select>
           <button type="button" title="ヘルプとクレジット" onclick="window.open('mountain/help.html')"><span class="one">ⓘ</span></button>
-          <button type="button" title="新規登録・修正" onclick="openPanel()">管理</button>
           <button type="button" class="navi"></button>
         </div>
         <div id="menu2" style="display:none;">
@@ -31,53 +30,56 @@
           <span>山名</span>
           <input type="checkbox" onchange="switchElement('centercross', this.checked)" checked>
           <span>中心十字</span>
+          <button type="button" title="前" onclick="addId(-1)">◁</button>
+          <input id="currId" style="width:2.5rem;" readonly>
+          <button type="button" title="次" onclick="addId(1)">▷</button>
+          <button type="button" title="新規登録・修正" onclick="openPanel()">管理</button>
         </div>
         <div id="dialog" style="display:none;">
-          <div>
-            <form name="login" action="">
-              <table>
-                <tr>
-                  <td>ユーザー名</td>
-                  <td><input name="username" style="width:9rem;"></td>
-                  <td rowspan="2"><button name="send">送信</button></td>
-                </tr>
-                <tr>
-                  <td>パスワード</td>
-                  <td><input type="password" name="password" style="width:9rem;"></td>
-                </tr>
-              </table>
-            </form>
-          </div>
+          <form name="login" action="">
+            <div style="display:grid;">
+              <label for="username" style="grid-row:1;grid-column:1;">ユーザー名</label>
+              <input name="username" style="grid-row:1;grid-column:2;width:9rem;">
+              <label for="password" style="grid-row:2;grid-column:1;">パスワード</label>
+              <input name="password" type="password" style="grid-row:2;grid-column:2;width:9rem;"></td>
+              <button style="grid-row:1;grid-column:3;">送信</button>
+            </div>
+          </form>
         </div>
         <div id="menu3" style="display:none;">
           <form name="panel" action="">
-            <table style="width:100%;">
-              <tr>
-                <td>ID</td>
-                <td><input name="id" style="width:4.5rem;" readonly></td>
-                <td>標高</td>
-                <td><input name="alt" style="width:5rem;" required></td>
-                <td><button type="button" onclick="readPos(true)">新規</button></td>
-              </tr>
-              <tr>
-                <td>緯度</td>
-                <td><input name="y" style="width:4.5rem;" readonly><input name="lat" type="hidden"></td>
-                <td>経度</td>
-                <td><input name="x" style="width:5rem;" readonly><input name="lon" type="hidden"></td>
-                </td>
-                <td><button type="button" onclick="readPos(false)">読取</button></td>
-              </tr>
-              <tr>
-                <td>山名</td>
-                <td colspan="3"><input name="name" style="width:12.5rem;" required></td>
-                <td><button type="button" onclick="confirmPos()">確認</button></td>
-              </tr>
-              <tr>
-                <td>よみ</td>
-                <td colspan="3"><input name="kana" style="width:12.5rem;" required></td>
-                <td><button>登録</button></td>
-              </tr>
-            </table>
+            <div style="display:grid;">
+              <label for="alt" style="grid-row:1;grid-column:1;">標高</label>
+              <input name="alt" style="grid-row:1;grid-column:2;width:4.5rem;" required>
+              <input name="prec" type="hidden">
+              <label for="auth" style="grid-row:1;grid-column:3;">出典</label>
+              <input name="auth" style="grid-row:1;grid-column:4;width:5rem;" required>
+              <button style="grid-row:1;grid-column:5;" type="button" onclick="readPos(true)">新規</button>
+
+              <label for="y" style="grid-row:2;grid-column:1;">緯度</label>
+              <input name="y" style="grid-row:2;grid-column:2;width:4.5rem;" readonly>
+              <input name="lat" type="hidden">
+              <label for="x" style="grid-row:2;grid-column:3;">経度</label>
+              <input name="x" style="grid-row:2;grid-column:4;width:5rem;" readonly>
+              <input name="lon" type="hidden">
+              <button style="grid-row:2;grid-column:5;" type="button" onclick="readPos(false)">読取</button>
+
+              <label for="name" style="grid-row:3;grid-column:1;">山名</label>
+              <input name="name" style="grid-row:3;grid-column:2/5;width:12.5rem;" required>
+              <button style="grid-row:3;grid-column:5;" type="button" onclick="confirmPos()">確認</button>
+
+              <label for="kana" style="grid-row:4;grid-column:1;">よみ</label>
+              <input name="kana" style="grid-row:4;grid-column:2/5;width:12.5rem;" required>
+              <button style="grid-row:4;grid-column:5;">登録</button>
+
+              <label style="grid-row:5;grid-column:1;">別名</label>
+              <input name="name0" style="grid-row:5;grid-column:2/4;width:7rem;">
+              <input name="kana0" style="grid-row:5;grid-column:4/6;width:8.5rem;">
+              <input name="name1" style="grid-row:6;grid-column:2/4;width:7rem;">
+              <input name="kana1" style="grid-row:6;grid-column:4/6;width:8.5rem;">
+              <input name="name2" style="grid-row:7;grid-column:2/4;width:7rem;">
+              <input name="kana2" style="grid-row:7;grid-column:4/6;width:8.5rem;">
+            </div>
           </form>
         </div><!-- #menu3 -->
       </div><!-- #toolbar -->

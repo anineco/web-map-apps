@@ -259,7 +259,7 @@ function openPopup(coordinate) {
     fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
     .then(response => response.json())
     .then(function (json) {
-      result.alt = parseInt(json.elevation + 0.5);
+      result.alt = Math.round(json.elevation + 0.5);
       resolve();
     })
   ));
@@ -285,13 +285,14 @@ function openPopup(coordinate) {
 window.openPopupCenter = () => { openPopup(view.getCenter()); };
 window.switchSanmei = (visible) => { sanmei.setVisible(visible); };
 
+const dialog = document.getElementById('dialog');
+const menu3 = document.getElementById('menu3');
+
 window.openPanel = () => {
-  const dialog = document.getElementById('dialog');
-  const menu = document.getElementById('menu3');
   if (dialog.style.display !== 'none') {
     // ログイン画面を閉じる
     dialog.style.display = 'none';
-  } else if (menu.style.display !== 'none') {
+  } else if (menu3.style.display !== 'none') {
     // ログアウト処理
     fetch(share + 'logout.php')
     .then(response => response.text())
@@ -299,7 +300,7 @@ window.openPanel = () => {
       if (text === 'SUCCESS') {
         alert('ログアウトしました');
       }
-      menu.style.display = 'none';
+      menu3.style.display = 'none';
     });
   } else {
     // ログイン中か確認する
@@ -307,10 +308,10 @@ window.openPanel = () => {
     .then(response => response.text())
     .then(function (text) {
       if (text === 'SUCCESS') {
-        menu.style.display = 'block';
+        menu3.style.display = 'block';
         dialog.style.display = 'none';
       } else {
-        menu.style.display = 'none';
+        menu3.style.display = 'none';
         dialog.style.display = 'block';
       }
     });
@@ -318,13 +319,24 @@ window.openPanel = () => {
 };
 
 const panel = document.forms['panel'];
+const currId = document.getElementById('currId');
+currId.value = 0;
+
+window.addId = (v) => {
+  const id = Number(currId.value) + v;
+  if (id < 1) {
+    alert('ID ' + id + 'は不正です');
+    return;
+  }
+  openPopupId(id, true, false);
+};
 
 window.readPos = (init) => {
   const lon_lat = toLonLat(view.getCenter());
   const lon = lon_lat[0].toFixed(6);
   const lat = lon_lat[1].toFixed(6);
   if (init) {
-    panel.id.value =  0;
+    currId.value =  0;
     panel.name.value = '';
     panel.kana.value = '';
   }
@@ -335,20 +347,32 @@ window.readPos = (init) => {
   fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
   .then(response => response.json())
   .then(function (json) {
-    panel.alt.value = parseInt(json.elevation + 0.5);
+    panel.alt.value = Math.round(json.elevation + 0.5);
   });
 };
 
 window.confirmPos = () => {
   if (panel.lon.value && panel.lat.value) {
+    const alias = Array(3);
+    for (let i = 0; i < 3; i++) {
+      alias[i] = {
+        name: panel[`name${i}`].value,
+        kana: panel[`kana${i}`].value
+      };
+    }
+    const a = alias.filter(i => i.name && i.kana);
     const coordinate = fromLonLat([panel.lon.value, panel.lat.value]);
     popup.show(coordinate,
       '<h2>' + (panel.name.value || '未設定')
       + '</h2><table><tbody><tr><td>よみ</td><td>' + (panel.kana.value || '未設定')
+      + (a.length > 0 ?
+          '</td></tr><tr><td>別名</td><td>' + a.map(
+            i => '<ruby>' + i.name + '<rt>' + i.kana + '</rt></ruby>'
+          ).join('<br>') : '')
       + '</td></tr><tr><td>標高</td><td>' + panel.alt.value
       + 'm</td></tr><tr><td>緯度</td><td>' + panel.y.value
       + '</td></tr><tr><td>経度</td><td>' + panel.x.value
-      + '</td></tr><tr><td>ID</td><td>' + (panel.id.value || '新規')
+      + '</td></tr><tr><td>ID</td><td>' + (currId.value || '新規')
       + '</td></tr></tbody></table>'
     );
   }
@@ -373,7 +397,7 @@ function query(s) {
     for (const geo of json.geo) {
       const tr = document.createElement('tr'); // new row
       let td = document.createElement('td'); // 1st column
-      td.addEventListener('click', () => { openPopupId(geo.id, true); });
+      td.addEventListener('click', () => openPopupId(geo.id, true, true));
       tr.appendChild(td).textContent = geo.id;
 
       td = document.createElement('td'); // 2nd column
@@ -388,35 +412,54 @@ function query(s) {
   });
 }
 
-function openPopupId(id, centering) {
+function openPopupId(id, centering, pop) {
+  currId.value = id;
   fetch(dburl + '?id=' + id)
   .then(response => response.json())
   .then(function (json) {
     const geo = json.geo[0];
-    panel.id.value = geo.id;
+    if (typeof geo.id === 'undefined') {
+      alert('ID' + id + 'は欠番です');
+      return;
+    }
+    panel.name.value = geo.name;
+    panel.kana.value = geo.kana;
+    for (let i = 0; i < 3; i++) {
+      if (i < geo.alias.length) {
+        panel[`name${i}`].value = geo.alias[i].name;
+        panel[`kana${i}`].value = geo.alias[i].kana;
+      } else {
+        panel[`name${i}`].value = '';
+        panel[`kana${i}`].value = '';
+      }
+    }
+
+    currId.value = geo.id;
     panel.alt.value = geo.alt;
+    panel.auth.value = geo.auth;
     panel.y.value = formatDEG(geo.lat);
     panel.x.value = formatDEG(geo.lon);
     panel.lat.value = geo.lat;
     panel.lon.value = geo.lon;
-    panel.name.value = geo.name;
-    panel.kana.value = geo.kana;
-
     const coordinate = fromLonLat([geo.lon, geo.lat]);
-    popup.show(coordinate,
-      '<h2>' + geo.name
-      + '</h2><table><tbody><tr><td>よみ</td><td>' + geo.kana
-      + (geo.alias.length > 0 ?
-          '</td></tr><tr><td>別名</td><td>' + geo.alias.map(
-            alias => '<ruby>' + alias.name + '<rt>' + alias.kana + '</rt></ruby>'
-          ).join('<br>') : '')
-      + '</td></tr><tr><td>標高</td><td>' + geo.alt
-      + 'm</td></tr><tr><td>緯度</td><td>' + panel.y.value
-      + '</td></tr><tr><td>経度</td><td>' + panel.x.value
-      + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
-      + '</td></tr><tr><td>ID</td><td>' + geo.id
-      + '</td></tr></tbody></table>'
-    );
+    if (pop) {
+      popup.show(coordinate,
+        '<h2>' + geo.name
+        + '</h2><table><tbody><tr><td>よみ</td><td>' + geo.kana
+        + (geo.alias.length > 0 ?
+            '</td></tr><tr><td>別名</td><td>' + geo.alias.map(
+              alias => '<ruby>' + alias.name + '<rt>' + alias.kana + '</rt></ruby>'
+            ).join('<br>') : '')
+        + '</td></tr><tr><td>標高</td><td>' + geo.alt
+        + 'm</td></tr><tr><td>緯度</td><td>' + panel.y.value
+        + '</td></tr><tr><td>経度</td><td>' + panel.x.value
+        + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
+        + '</td></tr><tr><td>ID</td><td>' + geo.id
+        + '</td></tr></tbody></table>'
+      );
+    } else {
+      popup.hide();
+    }
     if (centering) {
       view.setCenter(coordinate);
     }
@@ -434,8 +477,8 @@ document.forms['login'].addEventListener('submit', function (event) {
   .then(function (text) {
     if (text === 'SUCCESS') {
       alert('ログインしました');
-      document.getElementById('dialog').style.display = 'none';
-      document.getElementById('menu3').style.display = 'block';
+      dialog.style.display = 'none';
+      menu3.style.display = 'block';
     } else {
       alert('ログインに失敗しました');
     }
@@ -443,11 +486,13 @@ document.forms['login'].addEventListener('submit', function (event) {
   event.preventDefault();
 });
 
-document.forms['panel'].addEventListener('submit', function (event) {
+panel.addEventListener('submit', function (event) {
   const form = event.target;
+  const data = new FormData(form);
+  data.set('id', currId.value);
   fetch(dburl, {
     method: 'POST',
-    body: new FormData(form)
+    body: data
   })
   .then(response => response.text())
   .then(function (text) {
@@ -490,7 +535,7 @@ map.on('click', function (evt) {
       if (geometry.getType() !== 'Point') {
         return false;
       }
-      openPopupId(feature.getId(), false);
+      openPopupId(feature.getId(), false, true);
       return true;
     }
   );
