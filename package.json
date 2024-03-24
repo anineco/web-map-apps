@@ -20,14 +20,14 @@
   },
   "homepage": "https://github.com/anineco/web-map-apps#readme",
   "devDependencies": {
-    "cssnano": "^6.1.0",
+    "cssnano": "^6.1.1",
     "eslint": "^8.57.0",
     "is-svg": ">=5.0.0",
     "parcel": "^2.12.0"
   },
   "dependencies": {
     "ga-gtag": "^1.2.0",
-    "ol": "^9.0.0",
+    "ol": "^9.1.0",
     "ol-popup": "^5.1.0"
   },
   "browserslist": [
