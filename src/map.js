@@ -25,19 +25,20 @@ const dburl = share + 'db.php';
 const init = [
 // lat, lon, zoom, index, title
   [ 36.4967, 139.3318,  12,  0 ], // 全山行記録
-  [ 36.5439, 138.9261,   9,  1 ], // 日本三百名山
-  [ 36.5493, 138.9261,  10,  2 ], // ぐんま百名山
-  [ 36.7332, 139.7925,  10,  4 ], // 栃木百名山
-  [ 36.4967, 139.3318,  12, 12 ], // 桐生地域百山
-  [ 36.1019, 138.0629,   9,  7 ], // 信州百名山
-  [ 35.5747, 138.6364,  10,  8 ], // 山梨百名山
-  [ 37.4422, 140.1566,   9,  9 ], // うつくしま百名山
-  [ 36.0110, 139.0491,  11,  5 ], // 埼玉百山
-  [ 36.3690, 139.4490,  12, 13 ], // 足利百名山
-  [ 37.6869, 138.8786,   9, 11 ], // 越後百山
-  [ 36.5493, 138.9261,  10,  3 ], // 群馬300山
-  [ 37.4422, 140.1566,   9, 10 ], // 新うつくしま百名山
-  [ 35.4036, 139.3492,  10,  6 ]  // かながわ百名山
+  [ 36.5439, 138.9261,   9,  2 ], // 日本三百名山
+  [ 36.5493, 138.9261,  10,  3 ], // ぐんま百名山
+  [ 36.7332, 139.7925,  10,  5 ], // 栃木百名山
+  [ 36.4967, 139.3318,  12, 13 ], // 桐生地域百山
+  [ 36.1019, 138.0629,   9,  8 ], // 信州百名山
+  [ 35.5747, 138.6364,  10,  9 ], // 山梨百名山
+  [ 37.4422, 140.1566,   9, 10 ], // うつくしま百名山
+  [ 36.0110, 139.0491,  11,  6 ], // 埼玉百山
+  [ 36.3690, 139.4490,  12, 14 ], // 足利百名山
+  [ 37.6869, 138.8786,   9, 12 ], // 越後百山
+  [ 36.5493, 138.9261,  10,  4 ], // 群馬300山
+  [ 37.4422, 140.1566,   9, 11 ], // 新うつくしま百名山
+  [ 35.4036, 139.3492,  11,  7 ], // かながわ百名山
+  [ 36.5439, 138.9261,   9,  1 ]  // 日本の主な山岳
 ];
 const param = { lat: undefined, lon: undefined, zoom: undefined, cat: 1 };
 
@@ -121,24 +122,24 @@ const otm = new TileLayer({
   visible: false
 });
 
-const image = new Icon({
-  src: share + '952015.png',
-  declutterMode: 'none'
-});
+const image = [
+  new Icon({ src: share + '952015.png', declutterMode: 'none' }),
+  new Icon({ src: share + '902032.png', declutterMode: 'none' })
+];
 const fill = [
-  new Fill({ color: 'yellow' }),
-  new Fill({ color: 'blue'   })
+  new Fill({ color: 'blue'   }),
+  new Fill({ color: 'yellow' })
 ];
 const stroke = [
-  new Stroke({ width: 2, color: 'gray'  }),
-  new Stroke({ width: 2, color: 'white' })
+  new Stroke({ color: 'white', width: 2 }),
+  new Stroke({ color: 'gray', width: 2, })
 ];
 const font = '14px sans-serif';
 
 function styleFunction(feature) {
-  const i = feature.get('c') > 0 ? 1 : 0;
+  const i = feature.get('c') > 0 ? 0 : 1;
   return new Style({
-    image: image,
+    image: image[i],
     text: new Text({
       text: feature.get('name'),
       font: font,
