@@ -89,10 +89,11 @@ const otm = new TileLayer({
   visible: false
 });
 
-const image = new Icon({
-  src: share + '952015.png',
-  declutterMode: 'none'
-});
+const image = [
+  new Icon({ src: share + '902029.png', declutterMode: 'none' }), // ▲白
+  new Icon({ src: share + '902030.png', declutterMode: 'none' }), // ▲赤
+  new Icon({ src: share + '902031.png', declutterMode: 'none' })  // ▲黄
+];
 const fill = new Fill({
   color: 'blue'
 });
@@ -103,16 +104,17 @@ const stroke = new Stroke({
 const font = '14px sans-serif';
 
 function styleFunction(feature) {
+  const i = feature.get('p');
   return new Style({
-    image: image,
+    image: image[i],
     text: new Text({
       text: feature.get('name'),
       font: font,
       fill: fill,
       stroke: stroke,
       textAlign: 'left',
-      offsetX: 12,
-      offsetY: 3
+      offsetX: -4,
+      offsetY: 16
     }),
     zIndex: feature.get('alt')
   });
@@ -233,8 +235,8 @@ function fromStringYX(s) {
   if (ma) {
     return [Number(ma[2]), Number(ma[1])];
   }
-  ma = s.match(/^(\d+)°(\d+)′(\d+(\.\d*)?)″[,\s]\s*(\d+)°(\d+)′(\d+(\.\d*)?)″$/)
-    || s.match(/^(\d+)度(\d+)分(\d+(\.\d*)?)秒[,\s]\s*(\d+)度(\d+)分(\d+(\.\d*)?)秒$/);
+  ma = s.match(/^(?:北緯)?(\d+)°\s*(\d+)′\s*(\d+(\.\d*)?)″[,\s]\s*(?:東経)?(\d+)°\s*(\d+)′\s*(\d+(\.\d*)?)″$/)
+    || s.match(/^(?:北緯)?(\d+)度\s*(\d+)分\s*(\d+(\.\d*)?)秒[,\s]\s*(?:東経)?(\d+)度\s*(\d+)分\s*(\d+(\.\d*)?)秒$/);
   if (ma) {
     return [fromDMS(ma.slice(5, 8)), fromDMS(ma.slice(1, 4))];
   }
@@ -322,28 +324,28 @@ const panel = document.forms['panel'];
 const currId = document.getElementById('currId');
 currId.value = 0;
 
-window.addId = (v) => {
-  const id = Number(currId.value) + v;
-  if (id < 1) {
-    alert('ID ' + id + 'は不正です');
-    return;
+window.addId = (e, v) => { // v>0: 次のID, v<0: 前のID
+  console.log(e);
+  if (e.shiftKey) {
+    v = v > 0 ? 2 : -2;
   }
-  openPopupId(id, true, false);
+  openPopupId(currId.value, v, true, false);
 };
 
 window.readPos = (init) => {
-  const lon_lat = toLonLat(view.getCenter());
-  const lon = lon_lat[0].toFixed(6);
-  const lat = lon_lat[1].toFixed(6);
   if (init) {
     currId.value =  0;
     panel.name.value = '';
     panel.kana.value = '';
   }
+  const lon_lat = toLonLat(view.getCenter());
   panel.lat.value = lon_lat[1];
   panel.lon.value = lon_lat[0];
   panel.y.value = formatDEG(lon_lat[1]);
   panel.x.value = formatDEG(lon_lat[0]);
+
+  const lon = lon_lat[0].toFixed(6);
+  const lat = lon_lat[1].toFixed(6);
   fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
   .then(response => response.json())
   .then(function (json) {
@@ -397,7 +399,7 @@ function query(s) {
     for (const geo of json.geo) {
       const tr = document.createElement('tr'); // new row
       let td = document.createElement('td'); // 1st column
-      td.addEventListener('click', () => openPopupId(geo.id, true, true));
+      td.addEventListener('click', () => openPopupId(geo.id, 0, true, true));
       tr.appendChild(td).textContent = geo.id;
 
       td = document.createElement('td'); // 2nd column
@@ -412,35 +414,38 @@ function query(s) {
   });
 }
 
-function openPopupId(id, centering, pop) {
-  currId.value = id;
-  fetch(dburl + '?id=' + id)
+function setPanel(geo) {
+  currId.value = geo.id;
+  panel.name.value = geo.name;
+  panel.kana.value = geo.kana;
+  for (let i = 0; i < 3; i++) {
+    if (i < geo.alias.length) {
+      panel[`name${i}`].value = geo.alias[i].name;
+      panel[`kana${i}`].value = geo.alias[i].kana;
+    } else {
+      panel[`name${i}`].value = null;
+      panel[`kana${i}`].value = null;
+    }
+  }
+
+  panel.alt.value = geo.alt;
+  panel.auth.value = geo.auth;
+  panel.y.value = formatDEG(geo.lat);
+  panel.x.value = formatDEG(geo.lon);
+  panel.lat.value = geo.lat;
+  panel.lon.value = geo.lon;
+}
+
+function openPopupId(id, n, centering, pop) {
+  fetch(dburl + '?id=' + id + '&n=' + n)
   .then(response => response.json())
   .then(function (json) {
     const geo = json.geo[0];
     if (typeof geo.id === 'undefined') {
-      alert('ID' + id + 'は欠番です');
+      alert('IDがみつかりません');
       return;
     }
-    panel.name.value = geo.name;
-    panel.kana.value = geo.kana;
-    for (let i = 0; i < 3; i++) {
-      if (i < geo.alias.length) {
-        panel[`name${i}`].value = geo.alias[i].name;
-        panel[`kana${i}`].value = geo.alias[i].kana;
-      } else {
-        panel[`name${i}`].value = '';
-        panel[`kana${i}`].value = '';
-      }
-    }
-
-    currId.value = geo.id;
-    panel.alt.value = geo.alt;
-    panel.auth.value = geo.auth;
-    panel.y.value = formatDEG(geo.lat);
-    panel.x.value = formatDEG(geo.lon);
-    panel.lat.value = geo.lat;
-    panel.lon.value = geo.lon;
+    setPanel(geo);
     const coordinate = fromLonLat([geo.lon, geo.lat]);
     if (pop) {
       popup.show(coordinate,
@@ -494,9 +499,11 @@ panel.addEventListener('submit', function (event) {
     method: 'POST',
     body: data
   })
-  .then(response => response.text())
-  .then(function (text) {
-    alert(text);
+  .then(response => response.json())
+  .then(function (json) {
+    alert('SUCCESS');
+    const geo = json.geo[0];
+    setPanel(geo);
     popup.hide();
     sanmei.getSource().refresh();
   });
@@ -535,7 +542,7 @@ map.on('click', function (evt) {
       if (geometry.getType() !== 'Point') {
         return false;
       }
-      openPopupId(feature.getId(), false, true);
+      openPopupId(feature.getId(), 0, false, true);
       return true;
     }
   );

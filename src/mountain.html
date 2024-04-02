@@ -30,9 +30,9 @@
           <span>山名</span>
           <input type="checkbox" onchange="switchElement('centercross', this.checked)" checked>
           <span>中心十字</span>
-          <button type="button" title="前" onclick="addId(-1)">◁</button>
-          <input id="currId" style="width:2.5rem;" readonly>
-          <button type="button" title="次" onclick="addId(1)">▷</button>
+          <button type="button" title="前" onclick="addId(event,-1)">◁</button>
+          <input title="ID" id="currId" style="width:2.5rem;" readonly>
+          <button type="button" title="次" onclick="addId(event,+1)">▷</button>
           <button type="button" title="新規登録・修正" onclick="openPanel()">管理</button>
         </div>
         <div id="dialog" style="display:none;">
