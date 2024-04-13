@@ -1,6 +1,6 @@
 // map.js
 import View from 'ol/View';
-import {fromLonLat, toLonLat} from 'ol/proj';
+import {fromLonLat,toLonLat} from 'ol/proj';
 import TileLayer from 'ol/layer/Tile';
 import XYZ from 'ol/source/XYZ';
 import Icon from 'ol/style/Icon';
@@ -14,13 +14,15 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
 import {defaults} from 'ol/control';
 import ScaleLine from 'ol/control/ScaleLine';
-import Control from 'ol/control/Control';
 import Popup from 'ol-popup';
+import CenterCross from './centercross.js';
+import Toolbar from './toolbar.js';
+import Searchbar from './searchbar.js';
+import {formatDEG} from './transangle.js';
 import {install} from 'ga-gtag';
 
-install(process.env.GTAG1);
-const share = 'share/';
-const dburl = share + 'db.php';
+install(process.env.VITE_GTAG1);
+const share = process.env.VITE_SHARE;
 
 const init = [
 // lat, lon, zoom, index, title
@@ -67,8 +69,30 @@ window.addEventListener('DOMContentLoaded', function () {
   document.getElementById('tb-category').selectedIndex = category[3];
 });
 
+// min_zoom_list[grade]: minimal displayable zoom for grade
+/*
+const min_zoom_list = [
+  13, // 0: contour line
+  13, // 1: other source
+  12, // 2: elevation point
+  11, // 3: 4th-order triangulation point
+  10, // 4: 3rd-order triangulation point
+  9,  // 5: 2nd-order triangulation point
+  8,  // 6: 1st-order triangulation point
+  8   // 7: GPS-based control station
+];
+*/
+
+// minimal displayable grade for zoom
+function minGradeForZoom(zoom) {
+  return zoom >= 13 ? 0 : (zoom <= 8 ? 6 : 14 - zoom);
+}
+
+// minimun displayable level (=grade<<3) for current zoom
+let min_level = minGradeForZoom(param.zoom) << 3;
+
 const view = new View({
-  center: fromLonLat([param.lon, param.lat]),
+  center: fromLonLat([ Number(param.lon), Number(param.lat) ]),
   maxZoom: 18,
   minZoom: 5,
   constrainResolution: true,
@@ -81,7 +105,7 @@ const attributions = [
 
 const std = new TileLayer({
   source: new XYZ({
-    attributions: attributions,
+    attributions,
     url: 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
   }),
   title: '標準',
@@ -90,7 +114,7 @@ const std = new TileLayer({
 
 const pale = new TileLayer({
   source: new XYZ({
-    attributions: attributions,
+    attributions,
     url: 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png'
   }),
   title: '淡色',
@@ -100,7 +124,7 @@ const pale = new TileLayer({
 
 const seamlessphoto = new TileLayer({
   source: new XYZ({
-    attributions: attributions,
+    attributions,
     url: 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg'
   }),
   title: '写真',
@@ -122,40 +146,38 @@ const otm = new TileLayer({
   visible: false
 });
 
-const image = [
-  new Icon({ src: share + '952015.png', declutterMode: 'none' }),
-  new Icon({ src: share + '902032.png', declutterMode: 'none' })
+const image_fill_stroke = [
+  [
+    new Icon({ src: './icon/902030.png', declutterMode: 'none' }),
+    new Fill({ color: 'blue'   }),
+    new Stroke({ color: 'white', width: 2 })
+  ],
+  [
+    new Icon({ src: './icon/902031.png', declutterMode: 'none' }),
+    new Fill({ color: 'yellow' }),
+    new Stroke({ color: 'gray', width: 2, })
+  ]
 ];
-const fill = [
-  new Fill({ color: 'blue'   }),
-  new Fill({ color: 'yellow' })
-];
-const stroke = [
-  new Stroke({ color: 'white', width: 2 }),
-  new Stroke({ color: 'gray', width: 2, })
-];
+
 const font = '14px sans-serif';
+const textAlign = 'left';
+const offsetX = 12;
+const offsetY = 3;
 
 function styleFunction(feature) {
+  const level = feature.get('p');
+  if (level < min_level - 2) { // NOTE: レベルを緩和
+    return null;
+  }
   const i = feature.get('c') > 0 ? 0 : 1;
-  return new Style({
-    image: image[i],
-    text: new Text({
-      text: feature.get('name'),
-      font: font,
-      fill: fill[i],
-      stroke: stroke[i],
-      textAlign: 'left',
-      offsetX: 12,
-      offsetY: 3
-    }),
-    zIndex: feature.get('alt')
-  });
+  const [image, fill, stroke] = image_fill_stroke[i];
+  const text = new Text({ text: feature.get('name'), font, fill, stroke, textAlign, offsetX, offsetY });
+  return new Style({ image, text, zIndex: level & ~7 });
 }
 
 const sanmei = new VectorLayer({
   source: new VectorSource({
-    url: dburl + '?cat=' + param.cat + '&v=' + (param.cat > 0 ? 2 : 1),
+    url: share + 'db.php?cat=' + param.cat + '&v=' + (param.cat > 0 ? 2 : 1),
     format: new GeoJSON()
   }),
   title: '山名',
@@ -163,89 +185,34 @@ const sanmei = new VectorLayer({
   declutter: true
 });
 
+const centercross = new CenterCross({ element: document.getElementById('centercross') });
+const toolbar = new Toolbar({ element: document.getElementById('toolbar') });
+const searchbar = new Searchbar({ element: document.getElementById('searchbar') });
+// FIXME: If autoPan is enabled, popup.show immediately after setCenter causes uncertain center position.
+const popup = new Popup({ autoPan: false });
+
 const map = new Map({
   target: 'map',
-  layers: [std, pale, seamlessphoto, otm, sanmei],
-  view: view,
-  controls: defaults().extend([
-    new ScaleLine(),
-    new Control({ element: document.getElementById('toolbar') }),
-    new Control({ element: document.getElementById('searchbar') }),
-    new Control({ element: document.getElementById('crosshair') })
-  ])
+  layers: [ std, pale, seamlessphoto, otm, sanmei ],
+  view,
+  controls: defaults().extend([ new ScaleLine(), centercross, toolbar, searchbar ]),
+  overlays: [ popup ]
 });
 
-function toolbarCreateZoom(target) {
-  const element = document.getElementById(target);
-  const zmax = view.getMaxZoom();
-  const zmin = view.getMinZoom();
-  for (let i = 0; i <= zmax - zmin; i++) {
-    const opt = document.createElement('option');
-    element.appendChild(opt).textContent = zmax - i;
-  }
-  element.selectedIndex = zmax - view.getZoom();
-  element.addEventListener('change',
-    function () {
-      view.setZoom(this.options[this.selectedIndex].value);
-    },
-    { passive: true }
-  );
-  map.on('moveend', function () {
-    const i = zmax - view.getZoom();
-    if (element.selectedIndex != i) {
-      element.selectedIndex = i;
-    }
-  });
-}
+const menu2 = document.getElementById('menu2');
+toolbar.setToggleButton('tb_menu2', menu2);
 
-function toolbarCreateSelector(target) {
-  const element = document.getElementById(target);
-  const layers = map.getLayers().getArray().filter(layer => layer.get('type') == 'base');
-  for (const layer of layers) {
-    const opt = document.createElement('option');
-    opt.selected = layer.getVisible();
-    opt.textContent = layer.get('title');
-    element.appendChild(opt);
-  }
-  element.addEventListener('change',
-    function () {
-      layers.forEach((layer, index) => layer.setVisible(index == this.selectedIndex));
-    },
-    { passive: true }
-  );
-}
-
-toolbarCreateZoom('tb-zoom');
-toolbarCreateSelector('tb-base');
-
-window.toggle = function (target) {
-  const element = document.getElementById(target);
-  if (element.style.display != 'none') {
-    element.style.display = 'none';
-  } else {
-    element.style.display = 'block';
-  }
-};
-
-window.switchElement = function (target, checked) {
-  const element = document.getElementById(target);
-  element.style.display = checked ? 'block' : 'none';
-};
-
-function toDMS(deg) { // DEG -> DMS
-  const sec = parseInt(deg * 3600 + 0.5);
-  return [ parseInt(sec / 3600), parseInt((sec % 3600) / 60), sec % 60 ];
-}
-
-function formatDMS(dms) {
-  const m = ('0' + dms[1]).slice(-2);
-  const s = ('0' + dms[2]).slice(-2);
-  return dms[0] + '°' + m + '′' + s + '″';
-}
-
-function formatDEG(deg) {
-  return formatDMS(toDMS(deg));
-}
+toolbar.setPopup(popup);
+toolbar.setCenterButton('tb_center');
+toolbar.setBaseSelect('tb_base');
+toolbar.setZoomSelect('tb_zoom', (zoom) => {
+  view.setZoom(zoom);
+  min_level = minGradeForZoom(zoom) << 3;
+  sanmei.getSource().changed();
+});
+toolbar.setCreditButton('tb_help', 'map/help.html');
+toolbar.setLayerCheckbox('tb_sanmei', sanmei);
+toolbar.setControlCheckbox('tb_cross', centercross);
 
 function interval(start, end) {
   const s = start.split('-');
@@ -259,49 +226,6 @@ function interval(start, end) {
   }
   return start;
 }
-
-const popup = new Popup();
-map.addOverlay(popup);
-
-function openPopup(coordinate) {
-  const lon_lat = toLonLat(coordinate);
-  const lon = lon_lat[0].toFixed(6);
-  const lat = lon_lat[1].toFixed(6);
-  const result = {
-    lon: formatDEG(lon_lat[0]),
-    lat: formatDEG(lon_lat[1])
-  };
-  const sources = [];
-  const apiurl = 'https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php';
-  sources.push(new Promise((resolve) =>
-    fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
-    .then(response => response.json())
-    .then(function (json) {
-      result.alt = parseInt(json.elevation + 0.5);
-      resolve();
-    })
-  ));
-  sources.push(new Promise((resolve) =>
-    fetch(dburl + '?rgc=1&lon=' + lon + '&lat=' + lat)
-    .then(response => response.json())
-    .then(function (json) {
-      result.address = json.length ? json.map(i => i.name) : 'unknown';
-      resolve();
-    })
-  ));
-  Promise.all(sources).then(() => {
-    popup.show(coordinate,
-      '<h2>現在地</h2><table><tbody><tr><td>標高</td><td>' + result.alt
-      + 'm<tr><td>緯度</td><td>' + result.lat
-      + '</td></tr><tr><td>経度</td><td>' + result.lon
-      + '</td></tr><tr><td>所在</td><td>' + result.address.join('<br>')
-      + '</td></tr></tbody></table>'
-    );
-  });
-}
-
-window.openPopupCenter = () => { openPopup(view.getCenter()); };
-window.switchSanmei = (visible) => { sanmei.setVisible(visible); };
 
 const result = document.getElementById('result');
 const items = document.getElementById('items');
@@ -330,62 +254,76 @@ function showRecords(recs) {
   }
 }
 
-function openPopupId(id, centering) {
-  fetch(dburl + '?rec=' + id + '&c=' + param.cat)
+function openPopupId(id, center, pop) {
+  fetch(share + 'db.php?rec=' + id + '&c=' + param.cat)
   .then(response => response.json())
   .then(function (json) {
     const geo = json.geo[0];
-    const coordinate = fromLonLat([geo.lon, geo.lat]);
-    const html = '<h2>' + geo.name
-      + '</h2><table><tbody><tr><td>よみ</td><td>' + geo.kana
-      + (param.cat == 0 && geo.alias.length > 0 ?
-          '</td></tr><tr><td>別名</td><td>' + geo.alias.map(
-            alias => '<ruby>' + alias.name + '<rt>' + alias.kana + '</rt></ruby>'
-          ).join('<br>') : '')
-      + '</td></tr><tr><td>標高</td><td>' + geo.alt
-      + 'm</td></tr><tr><td>緯度</td><td>' + formatDEG(geo.lat)
-      + '</td></tr><tr><td>経度</td><td>' + formatDEG(geo.lon)
-      + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
-      + '</td></tr></tbody></table>';
-    popup.show(coordinate, html);
-    if (centering) {
+    const lon = Number(geo.lon);
+    const lat = Number(geo.lat);
+    geo.x = formatDEG(lon);
+    geo.y = formatDEG(lat);
+    const coordinate = fromLonLat([ lon, lat ]);
+    if (center) {
       view.setCenter(coordinate);
+    }
+    if (pop) {
+      toolbar.openPopupName(coordinate, geo);
     }
     showRecords(json.rec);
   });
 }
 
-map.on('click', function (evt) {
+map.on('click', function (event) {
   map.forEachFeatureAtPixel(
-    evt.pixel,
+    event.pixel,
     function (feature, _layer) {
       const geometry = feature.getGeometry();
       if (geometry.getType() !== 'Point') {
         return false;
       }
-      openPopupId(feature.getId(), false);
+      openPopupId(feature.getId(), false, true);
       return true;
     }
   );
 });
 
-map.on('pointermove', function (evt) {
-  if (evt.dragging) { return; }
+const passive = { passive: true };
+
+map.on('pointermove', function (event) {
+  if (event.dragging) { return; }
   const found = map.forEachFeatureAtPixel(
-    map.getEventPixel(evt.originalEvent),
+    map.getEventPixel(event.originalEvent),
     (feature, _layer) => feature.getGeometry().getType() === 'Point'
   );
   map.getTargetElement().style.cursor = found ? 'pointer' : '';
-});
+}, passive);
+
+const tb_exit = document.getElementById('tb_exit');
+
+window.addEventListener('DOMContentLoaded', function (_event) {
+  let text, handler;
+  if (window.opener) {
+    text = '✖︎';
+    handler = () => window.close();
+  } else if (history.length > 1) {
+    text = '戻る';
+    handler = () => history.back();
+  } else {
+    text = 'TOP';
+    handler = () => location.assign('.');
+  }
+  tb_exit.innerText = text;
+  tb_exit.addEventListener('click', handler, passive);
+}, passive);
 
 window.addEventListener('load', function (_event) {
-  const img = document.createElement('img');
-  img.setAttribute('src', 'lime/lime.cgi?map'); // access counter
-  img.setAttribute('width', 1);
-  img.setAttribute('height', 1);
-  const node = document.querySelector('.navi');
-  node.parentNode.insertBefore(img, node);
-});
+  const img = new Image();
+  img.src = 'lime/lime.cgi?map'; // access counter
+  img.width = 1;
+  img.height = 1;
+  tb_exit.parentNode.insertBefore(img, tb_exit);
+}, passive);
 
 window.addEventListener('beforeunload', function (_event) {
   const lon_lat = toLonLat(view.getCenter());
@@ -395,5 +333,5 @@ window.addEventListener('beforeunload', function (_event) {
   for (const key in param) {
     localStorage.setItem(key, param[key]);
   }
-});
-// end of map.js
+}, passive);
+// __END__

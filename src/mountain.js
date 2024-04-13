@@ -1,6 +1,6 @@
 // mountain.js
 import View from 'ol/View';
-import {fromLonLat, toLonLat} from 'ol/proj';
+import {fromLonLat,toLonLat} from 'ol/proj';
 import TileLayer from 'ol/layer/Tile';
 import XYZ from 'ol/source/XYZ';
 import Icon from 'ol/style/Icon';
@@ -14,13 +14,15 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
 import {defaults} from 'ol/control';
 import ScaleLine from 'ol/control/ScaleLine';
-import Control from 'ol/control/Control';
 import Popup from 'ol-popup';
+import CenterCross from './centercross.js';
+import Toolbar from './toolbar.js';
+import Searchbar from './searchbar.js';
+import {formatDEG,fromStringYX} from './transangle.js';
 import {install} from 'ga-gtag';
 
-install(process.env.GTAG2);
-const share = 'share/';
-const dburl = share + 'db.php';
+install(process.env.VITE_GTAG2);
+const share = process.env.VITE_SHARE;
 
 const param = { lon: 138.727412, lat: 35.360601, zoom: 12 };
 
@@ -34,8 +36,28 @@ for (const arg of location.search.slice(1).split('&')) {
   }
 }
 
+// min_zoom_list[grade]: minimal displayable zoom for grade
+const min_zoom_list = [
+  13, // 0: contour line
+  13, // 1: other source
+  12, // 2: elevation point
+  11, // 3: 4th-order triangulation point
+  10, // 4: 3rd-order triangulation point
+  9,  // 5: 2nd-order triangulation point
+  8,  // 6: 1st-order triangulation point
+  8   // 7: GPS-based control station
+];
+
+// minimal displayable grade for zoom
+function minGradeForZoom(zoom) {
+  return zoom >= 13 ? 0 : (zoom <= 8 ? 6 : 14 - zoom);
+}
+
+// minimun displayable level (=grade<<3) for current zoom
+let min_level = minGradeForZoom(param.zoom) << 3;
+
 const view = new View({
-  center: fromLonLat([param.lon, param.lat]),
+  center: fromLonLat([ Number(param.lon), Number(param.lat) ]),
   maxZoom: 18,
   minZoom: 5,
   constrainResolution: true,
@@ -48,7 +70,7 @@ const attributions = [
 
 const std = new TileLayer({
   source: new XYZ({
-    attributions: attributions,
+    attributions,
     url: 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
   }),
   title: '標準',
@@ -57,7 +79,7 @@ const std = new TileLayer({
 
 const pale = new TileLayer({
   source: new XYZ({
-    attributions: attributions,
+    attributions,
     url: 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png'
   }),
   title: '淡色',
@@ -67,7 +89,7 @@ const pale = new TileLayer({
 
 const seamlessphoto = new TileLayer({
   source: new XYZ({
-    attributions: attributions,
+    attributions,
     url: 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg'
   }),
   title: '写真',
@@ -89,40 +111,32 @@ const otm = new TileLayer({
   visible: false
 });
 
-const image = [
-  new Icon({ src: share + '902029.png', declutterMode: 'none' }), // ▲白
-  new Icon({ src: share + '902030.png', declutterMode: 'none' }), // ▲赤
-  new Icon({ src: share + '902031.png', declutterMode: 'none' })  // ▲黄
-];
-const fill = new Fill({
-  color: 'blue'
-});
-const stroke = new Stroke({
-  color: 'white',
-  width: 2
-});
+const img_w = new Icon({ src: './icon/902029.png', declutterMode: 'none' });
+const img_r = new Icon({ src: './icon/902030.png', declutterMode: 'none' });
+const img_y = new Icon({ src: './icon/902031.png', declutterMode: 'none' });
+const img = [ img_w, img_w, img_y, img_r, img_r, img_r, img_r, img_r ];
+
 const font = '14px sans-serif';
+const fill = new Fill({ color: 'blue' });
+const stroke = new Stroke({ color: 'white', width: 2 });
+const textAlign = 'left';
+const offsetX = -4;
+const offsetY = 16;
+const declutterMode = 'declutter';
 
 function styleFunction(feature) {
-  const i = feature.get('p');
-  return new Style({
-    image: image[i],
-    text: new Text({
-      text: feature.get('name'),
-      font: font,
-      fill: fill,
-      stroke: stroke,
-      textAlign: 'left',
-      offsetX: -4,
-      offsetY: 16
-    }),
-    zIndex: feature.get('alt')
-  });
+  const level = feature.get('p');
+  if (level < min_level) {
+    return null;
+  }
+  const image = img[level & 7];
+  const text = new Text({ font, fill, stroke, textAlign, offsetX, offsetY, declutterMode, text: feature.get('name') });
+  return new Style({ image, text, zIndex: level & ~7 });
 }
 
 const sanmei = new VectorLayer({
   source: new VectorSource({
-    url: dburl + '?cat=0&v=0',
+    url: share + 'db.php?cat=0&v=0',
     format: new GeoJSON()
   }),
   title: '山名',
@@ -130,171 +144,159 @@ const sanmei = new VectorLayer({
   declutter: true
 });
 
+const centercross = new CenterCross({ element: document.getElementById('centercross') });
+const toolbar = new Toolbar({ element: document.getElementById('toolbar') });
+const searchbar = new Searchbar({ element: document.getElementById('searchbar') });
+// FIXME: If autoPan is enabled, popup.show immediately after setCenter causes uncertain center position.
+const popup = new Popup({ autoPan: false });
+
 const map = new Map({
   target: 'map',
-  layers: [std, pale, seamlessphoto, otm, sanmei],
-  view: view,
-  controls: defaults().extend([
-    new ScaleLine(),
-    new Control({ element: document.getElementById('toolbar') }),
-    new Control({ element: document.getElementById('searchbar') }),
-    new Control({ element: document.getElementById('centercross') })
-  ])
+  layers: [ std, pale, seamlessphoto, otm, sanmei ],
+  view,
+  controls: defaults().extend([ new ScaleLine(), centercross, toolbar, searchbar ]),
+  overlays: [ popup ]
 });
 
-function toolbarCreateZoom(target) {
-  const element = document.getElementById(target);
-  const zmax = view.getMaxZoom();
-  const zmin = view.getMinZoom();
-  for (let i = 0; i <= zmax - zmin; i++) {
-    const opt = document.createElement('option');
-    element.appendChild(opt).textContent = zmax - i;
+const passive = { passive: true };
+
+const menu2 = document.getElementById('menu2');
+toolbar.setToggleButton('tb_menu2', menu2);
+
+toolbar.setPopup(popup);
+toolbar.setCenterButton('tb_center');
+toolbar.setBaseSelect('tb_base');
+toolbar.setZoomSelect('tb_zoom', (zoom) => {
+  view.setZoom(zoom);
+  min_level = minGradeForZoom(zoom) << 3;
+  sanmei.getSource().changed();
+});
+toolbar.setCreditButton('tb_help', 'mountain/help.html');
+toolbar.setLayerCheckbox('tb_sanmei', sanmei);
+toolbar.setControlCheckbox('tb_cross', centercross);
+
+const panel = document.forms.panel.elements;
+const currId = document.getElementById('tb_curr');
+currId.value = 0;
+
+function setPanel(geo) {
+  currId.value = geo.id;
+  panel.name.value = geo.name;
+  panel.kana.value = geo.kana;
+  panel.alt.value = geo.alt;
+  panel.auth.value = geo.auth;
+  panel.y.value = geo.y;
+  panel.x.value = geo.x;
+  panel.lat.value = geo.lat;
+  panel.lon.value = geo.lon;
+  for (let i = 0; i < 3; i++) {
+    if (i < geo.alias.length) {
+      panel[`name${i}`].value = geo.alias[i].name;
+      panel[`kana${i}`].value = geo.alias[i].kana;
+    } else {
+      panel[`name${i}`].value = null;
+      panel[`kana${i}`].value = null;
+    }
   }
-  element.selectedIndex = zmax - view.getZoom();
-  element.addEventListener('change',
-    function () {
-      view.setZoom(this.options[this.selectedIndex].value);
-    },
-    { passive: true }
-  );
-  map.on('moveend', function () {
-    const i = zmax - view.getZoom();
-    if (element.selectedIndex != i) {
-      element.selectedIndex = i;
+}
+
+function getPanel() {
+  const geo = {
+    id: currId.value,
+    name: panel.name.value || '未設定',
+    kana: panel.kana.value,
+    alt: panel.alt.value,
+    auth: panel.auth.value,
+    y: panel.y.value,
+    x: panel.x.value,
+    lat: panel.lat.value,
+    lon: panel.lon.value
+  };
+  const alias = Array(3);
+  for (let i = 0; i < 3; i++) {
+    alias[i] = {
+      name: panel[`name${i}`].value,
+      kana: panel[`kana${i}`].value
+    };
+  }
+  geo.alias = alias.filter(i => i.name && i.kana);
+  return geo;
+}
+
+function openPopupId(id, center, pop) {
+  fetch(share + 'db.php?id=' + id)
+  .then(response => response.json())
+  .then(function (json) {
+    const geo = json.geo[0];
+    const lon = Number(geo.lon);
+    const lat = Number(geo.lat);
+    geo.x = formatDEG(lon);
+    geo.y = formatDEG(lat);
+    setPanel(geo);
+    const coordinate = fromLonLat([ lon, lat ]);
+    if (center) {
+      view.setCenter(coordinate);
+    }
+    if (pop) {
+      toolbar.openPopupName(coordinate, geo);
+    }
+    const level = geo.level & ~7;
+    if (min_level > level) {
+      min_level = level;
+      view.setZoom(min_zoom_list[level >> 3]);
+      sanmei.getSource().changed();
     }
   });
 }
 
-function toolbarCreateSelector(target) {
-  const element = document.getElementById(target);
-  const layers = map.getLayers().getArray().filter(layer => layer.get('type') == 'base');
-  for (const layer of layers) {
-    const opt = document.createElement('option');
-    opt.selected = layer.getVisible();
-    opt.textContent = layer.get('title');
-    element.appendChild(opt);
-  }
-  element.addEventListener('change',
-    function () {
-      layers.forEach((layer, index) => layer.setVisible(index == this.selectedIndex));
-    },
-    { passive: true }
-  );
-}
-
-toolbarCreateZoom('tb-zoom');
-toolbarCreateSelector('tb-base');
-
-window.toggle = function (target) {
-  const element = document.getElementById(target);
-  if (element.style.display != 'none') {
-    element.style.display = 'none';
-  } else {
-    element.style.display = 'block';
-  }
-};
-
-window.switchElement = function (target, checked) {
-  const element = document.getElementById(target);
-  element.style.display = checked ? 'block' : 'none';
-};
-
-function toDMS(deg) { // DEG -> DMS
-  const sec = parseInt(deg * 3600 + 0.5);
-  return [ parseInt(sec / 3600), parseInt((sec % 3600) / 60), sec % 60 ];
-}
-
-function fromDMS(dms) { // DMS -> DEG
-  return (Number(dms[2]) / 60 + Number(dms[1])) / 60 + Number(dms[0]);
-}
-
-function fromDigitDMS(s) { // digit -> DMS
-  return String(s).match(/^(\d+)(\d\d)(\d\d)$/).slice(1);
-}
-
-function fromDigit(s) { // digit -> DEG
-  return fromDMS(fromDigitDMS(s));
-}
-
-function formatDMS(dms) {
-  const m = ('0' + dms[1]).slice(-2);
-  const s = ('0' + dms[2]).slice(-2);
-  return dms[0] + '°' + m + '′' + s + '″';
-}
-
-function formatDEG(deg) {
-  return formatDMS(toDMS(deg));
-}
-
-function fromStringYX(s) {
-  let ma = s.match(/^(\d+)[,\s]\s*(\d+)$/);
-  if (ma) {
-    return [fromDigit(ma[2]), fromDigit(ma[1])];
-  }
-  ma = s.match(/^(\d+\.\d*)[,\s]\s*(\d+\.\d*)$/);
-  if (ma) {
-    return [Number(ma[2]), Number(ma[1])];
-  }
-  ma = s.match(/^(?:北緯)?(\d+)°\s*(\d+)′\s*(\d+(\.\d*)?)″[,\s]\s*(?:東経)?(\d+)°\s*(\d+)′\s*(\d+(\.\d*)?)″$/)
-    || s.match(/^(?:北緯)?(\d+)度\s*(\d+)分\s*(\d+(\.\d*)?)秒[,\s]\s*(?:東経)?(\d+)度\s*(\d+)分\s*(\d+(\.\d*)?)秒$/);
-  if (ma) {
-    return [fromDMS(ma.slice(5, 8)), fromDMS(ma.slice(1, 4))];
-  }
-  return null;
-}
-
-const popup = new Popup();
-map.addOverlay(popup);
-
-const apiurl = 'https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php';
-
-function openPopup(coordinate) {
-  const lon_lat = toLonLat(coordinate);
-  const lon = lon_lat[0].toFixed(6);
-  const lat = lon_lat[1].toFixed(6);
-  const result = {
-    lon: lon_lat[0],
-    lat: lon_lat[1]
-  };
-  const sources = [];
-  sources.push(new Promise((resolve) =>
-    fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
-    .then(response => response.json())
-    .then(function (json) {
-      result.alt = Math.round(json.elevation + 0.5);
-      resolve();
-    })
-  ));
-  sources.push(new Promise((resolve) =>
-    fetch(dburl + '?rgc=1&lon=' + lon + '&lat=' + lat)
-    .then(response => response.json())
-    .then(function (json) {
-      result.address = json.length ? json.map(i => i.name) : 'unknown';
-      resolve();
-    })
-  ));
-  Promise.all(sources).then(() => {
-    popup.show(coordinate,
-      '<h2>現在地</h2><table><tbody><tr><td>標高</td><td>' + result.alt
-      + 'm<tr><td>緯度</td><td>' + formatDEG(result.lat)
-      + '</td></tr><tr><td>経度</td><td>' + formatDEG(result.lon)
-      + '</td></tr><tr><td>所在</td><td>' + result.address.join('<br>')
-      + '</td></tr></tbody></table>'
-    );
+function seekId(direc) {
+  const id = currId.value;
+  fetch(share + 'db.php?id=' + id + '&n=' + direc)
+  .then(response => response.json())
+  .then(function (json) {
+    const geo = json.geo[0];
+    if (geo.id != id) {
+      const lon = Number(geo.lon);
+      const lat = Number(geo.lat);
+      geo.x = formatDEG(lon);
+      geo.y = formatDEG(lat);
+      setPanel(geo);
+      const coordinate = fromLonLat([ lon, lat ]);
+      view.setCenter(coordinate);
+      const level = geo.level & ~7;
+      if (min_level > level) {
+        view.setZoom(min_zoom_list[level >> 3]);
+        min_level = level;
+        sanmei.getSource().changed();
+      }
+      if (div2.style.display == 'none') {
+        toolbar.openPopupName(coordinate, geo);
+      }
+    }
   });
 }
 
-window.openPopupCenter = () => { openPopup(view.getCenter()); };
-window.switchSanmei = (visible) => { sanmei.setVisible(visible); };
+// ◀︎ボタン
+document.getElementById('tb_prev').addEventListener('click', function (event) {
+  seekId(event.shiftKey ? -2 : -1);
+}, passive);
 
-const dialog = document.getElementById('dialog');
-const menu3 = document.getElementById('menu3');
+// ▶︎ボタン
+document.getElementById('tb_next').addEventListener('click', function (event) {
+  seekId(event.shiftKey ? 2 : 1);
+}, passive);
 
-window.openPanel = () => {
-  if (dialog.style.display !== 'none') {
+const div1 = document.getElementById('menu3'); // ログイン画面
+const div2 = document.getElementById('menu4'); // 編集パネル
+
+// 管理ボタン
+document.getElementById('tb_login').addEventListener('click', function (_event) {
+  if (div1.style.display !== 'none') {
     // ログイン画面を閉じる
-    dialog.style.display = 'none';
-  } else if (menu3.style.display !== 'none') {
+    div1.style.display = 'none';
+    return;
+  }
+  if (div2.style.display !== 'none') {
     // ログアウト処理
     fetch(share + 'logout.php')
     .then(response => response.text())
@@ -302,42 +304,46 @@ window.openPanel = () => {
       if (text === 'SUCCESS') {
         alert('ログアウトしました');
       }
-      menu3.style.display = 'none';
+      div2.style.display = 'none';
     });
-  } else {
-    // ログイン中か確認する
-    fetch(share + 'login.php')
-    .then(response => response.text())
-    .then(function (text) {
-      if (text === 'SUCCESS') {
-        menu3.style.display = 'block';
-        dialog.style.display = 'none';
-      } else {
-        menu3.style.display = 'none';
-        dialog.style.display = 'block';
-      }
-    });
+    return;
   }
-};
+  // ログイン中か確認する
+  fetch(share + 'login.php')
+  .then(response => response.text())
+  .then(function (text) {
+    if (text === 'SUCCESS') {
+      div1.style.display = 'none';
+      div2.style.display = 'block';
+      toolbar.closePopup();
+    } else {
+      div2.style.display = 'none';
+      div1.style.display = 'block';
+    }
+  });
+}, passive);
 
-const panel = document.forms['panel'];
-const currId = document.getElementById('currId');
-currId.value = 0;
+// ログイン処理
+document.forms.login.addEventListener('submit', function (event) {
+  fetch(share + 'login.php', {
+    method: 'POST',
+    body: new FormData(event.target)
+  })
+  .then(response => response.text())
+  .then(function (text) {
+    if (text === 'SUCCESS') {
+      alert('ログイン成功');
+      div1.style.display = 'none';
+      div2.style.display = 'block';
+      toolbar.closePopup();
+    } else {
+      alert('ログイン失敗');
+    }
+  });
+  event.preventDefault();
+});
 
-window.addId = (e, v) => { // v>0: 次のID, v<0: 前のID
-  console.log(e);
-  if (e.shiftKey) {
-    v = v > 0 ? 2 : -2;
-  }
-  openPopupId(currId.value, v, true, false);
-};
-
-window.readPos = (init) => {
-  if (init) {
-    currId.value =  0;
-    panel.name.value = '';
-    panel.kana.value = '';
-  }
+function readCenter() {
   const lon_lat = toLonLat(view.getCenter());
   panel.lat.value = lon_lat[1];
   panel.lon.value = lon_lat[0];
@@ -346,41 +352,62 @@ window.readPos = (init) => {
 
   const lon = lon_lat[0].toFixed(6);
   const lat = lon_lat[1].toFixed(6);
-  fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
+  fetch('https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php?outtype=JSON&lon=' + lon + '&lat=' + lat)
   .then(response => response.json())
   .then(function (json) {
-    panel.alt.value = Math.round(json.elevation + 0.5);
+    panel.alt.value = typeof (json.elevation) === 'number' ? Math.round(json.elevation + 0.5) : -9999;
   });
-};
+}
 
-window.confirmPos = () => {
+// 新規ボタン
+document.getElementById('tb_new').addEventListener('click', function (_event) {
+  currId.value =  0;
+  panel.name.value = '';
+  panel.kana.value = '';
+  readCenter();
+}, passive);
+
+// 読取ボタン
+document.getElementById('tb_read').addEventListener('click', readCenter, passive);
+
+// 表示ボタン
+document.getElementById('tb_disp').addEventListener('click', function (_event) {
   if (panel.lon.value && panel.lat.value) {
-    const alias = Array(3);
-    for (let i = 0; i < 3; i++) {
-      alias[i] = {
-        name: panel[`name${i}`].value,
-        kana: panel[`kana${i}`].value
-      };
-    }
-    const a = alias.filter(i => i.name && i.kana);
-    const coordinate = fromLonLat([panel.lon.value, panel.lat.value]);
-    popup.show(coordinate,
-      '<h2>' + (panel.name.value || '未設定')
-      + '</h2><table><tbody><tr><td>よみ</td><td>' + (panel.kana.value || '未設定')
-      + (a.length > 0 ?
-          '</td></tr><tr><td>別名</td><td>' + a.map(
-            i => '<ruby>' + i.name + '<rt>' + i.kana + '</rt></ruby>'
-          ).join('<br>') : '')
-      + '</td></tr><tr><td>標高</td><td>' + panel.alt.value
-      + 'm</td></tr><tr><td>緯度</td><td>' + panel.y.value
-      + '</td></tr><tr><td>経度</td><td>' + panel.x.value
-      + '</td></tr><tr><td>ID</td><td>' + (currId.value || '新規')
-      + '</td></tr></tbody></table>'
-    );
+    const coordinate = fromLonLat([ Number(panel.lon.value), Number(panel.lat.value) ]);
+    const geo = getPanel();
+    geo.address = [];
+    toolbar.openPopupName(coordinate, geo);
+  } else {
+    alert('位置が未指定');
   }
-};
+}, passive);
+
+// 登録ボタン
+document.forms.panel.addEventListener('submit', function (event) {
+  const data = new FormData(event.target);
+  data.set('id', currId.value);
+  fetch(share + 'db.php', {
+    method: 'POST',
+    body: data
+  })
+  .then(response => response.json())
+  .then(function (json) {
+    alert('登録完了');
+    const geo = json.geo[0];
+    geo.y = formatDEG(geo.lat);
+    geo.x = formatDEG(geo.lon);
+    setPanel(geo);
+    toolbar.closePopup();
+    sanmei.getSource().refresh();
+  });
+  event.preventDefault();
+});
 
 const result = document.getElementById('result');
+document.getElementById('tb_result').addEventListener('click', function (_event) {
+  result.style.display = result.style.display != 'none' ? 'none' : 'block';
+});
+
 const count = document.getElementById('count');
 const items = document.getElementById('items');
 let result_json;
@@ -391,7 +418,7 @@ function query(s) {
   }
   count.textContent = '検索中';
   result.style.display = 'block';
-  fetch(dburl + '?q=' + encodeURIComponent(s))
+  fetch(share + 'db.php?q=' + encodeURIComponent(s))
   .then(response => response.json())
   .then(function (json) {
     result_json = json;
@@ -399,120 +426,28 @@ function query(s) {
     for (const geo of json.geo) {
       const tr = document.createElement('tr'); // new row
       let td = document.createElement('td'); // 1st column
-      td.addEventListener('click', () => openPopupId(geo.id, 0, true, true));
-      tr.appendChild(td).textContent = geo.id;
+      td.textContent = geo.id;
+      td.addEventListener('click', function (_event) {
+        openPopupId(this.textContent, true, div2.style.display == 'none');
+      }, passive);
+      tr.appendChild(td);
 
       td = document.createElement('td'); // 2nd column
       const ruby = document.createElement('ruby');
-      const rt = document.createElement('rt');
       ruby.textContent = geo.name;
-      tr.appendChild(td).appendChild(ruby).appendChild(rt).textContent = geo.kana;
+      const rt = document.createElement('rt');
+      rt.textContent = geo.kana;
+      tr.appendChild(td).appendChild(ruby).appendChild(rt);
 
       td = document.createElement('td'); // 3rd column
-      items.appendChild(tr).appendChild(td).textContent = geo.alt;
+      td.textContent = geo.alt;
+      items.appendChild(tr).appendChild(td);
     }
   });
 }
 
-function setPanel(geo) {
-  currId.value = geo.id;
-  panel.name.value = geo.name;
-  panel.kana.value = geo.kana;
-  for (let i = 0; i < 3; i++) {
-    if (i < geo.alias.length) {
-      panel[`name${i}`].value = geo.alias[i].name;
-      panel[`kana${i}`].value = geo.alias[i].kana;
-    } else {
-      panel[`name${i}`].value = null;
-      panel[`kana${i}`].value = null;
-    }
-  }
-
-  panel.alt.value = geo.alt;
-  panel.auth.value = geo.auth;
-  panel.y.value = formatDEG(geo.lat);
-  panel.x.value = formatDEG(geo.lon);
-  panel.lat.value = geo.lat;
-  panel.lon.value = geo.lon;
-}
-
-function openPopupId(id, n, centering, pop) {
-  fetch(dburl + '?id=' + id + '&n=' + n)
-  .then(response => response.json())
-  .then(function (json) {
-    const geo = json.geo[0];
-    if (typeof geo.id === 'undefined') {
-      alert('IDがみつかりません');
-      return;
-    }
-    setPanel(geo);
-    const coordinate = fromLonLat([geo.lon, geo.lat]);
-    if (pop) {
-      popup.show(coordinate,
-        '<h2>' + geo.name
-        + '</h2><table><tbody><tr><td>よみ</td><td>' + geo.kana
-        + (geo.alias.length > 0 ?
-            '</td></tr><tr><td>別名</td><td>' + geo.alias.map(
-              alias => '<ruby>' + alias.name + '<rt>' + alias.kana + '</rt></ruby>'
-            ).join('<br>') : '')
-        + '</td></tr><tr><td>標高</td><td>' + geo.alt
-        + 'm</td></tr><tr><td>緯度</td><td>' + panel.y.value
-        + '</td></tr><tr><td>経度</td><td>' + panel.x.value
-        + '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>')
-        + '</td></tr><tr><td>ID</td><td>' + geo.id
-        + '</td></tr></tbody></table>'
-      );
-    } else {
-      popup.hide();
-    }
-    if (centering) {
-      view.setCenter(coordinate);
-    }
-  });
-}
-
-document.forms['login'].addEventListener('submit', function (event) {
-  // ログイン処理
-  const form = event.target;
-  fetch(share + 'login.php', {
-    method: 'POST',
-    body: new FormData(form)
-  })
-  .then(response => response.text())
-  .then(function (text) {
-    if (text === 'SUCCESS') {
-      alert('ログインしました');
-      dialog.style.display = 'none';
-      menu3.style.display = 'block';
-    } else {
-      alert('ログインに失敗しました');
-    }
-  });
-  event.preventDefault();
-});
-
-panel.addEventListener('submit', function (event) {
-  const form = event.target;
-  const data = new FormData(form);
-  data.set('id', currId.value);
-  fetch(dburl, {
-    method: 'POST',
-    body: data
-  })
-  .then(response => response.json())
-  .then(function (json) {
-    alert('SUCCESS');
-    const geo = json.geo[0];
-    setPanel(geo);
-    popup.hide();
-    sanmei.getSource().refresh();
-  });
-  event.preventDefault();
-});
-
-document.forms['form1'].addEventListener('submit', function (event) {
-  const form = event.target;
-  const s = form.elements['query'].value;
+document.forms.form1.addEventListener('submit', function (event) {
+  const s = event.target.elements.query.value;
   const lon_lat = fromStringYX(s);
   if (lon_lat) {
     view.setCenter(fromLonLat(lon_lat));
@@ -522,11 +457,11 @@ document.forms['form1'].addEventListener('submit', function (event) {
   event.preventDefault();
 });
 
-document.forms['form2'].addEventListener('submit', function (event) {
+document.forms.form2.addEventListener('submit', function (event) {
   const csv = 'ID,山名,よみ,標高,緯度,経度,備考\n' + result_json.geo.map(x => [
     x.id, x.name, x.kana, x.alt, x.lat, x.lon, ''
   ].join()).join('\n') + '\n';
-  const b = new Blob([csv], { type: 'text/csv' });
+  const b = new Blob([ csv ], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(b);
   a.download = 'result.csv';
@@ -534,52 +469,54 @@ document.forms['form2'].addEventListener('submit', function (event) {
   event.preventDefault();
 });
 
-map.on('click', function (evt) {
+map.on('click', function (event) {
   map.forEachFeatureAtPixel(
-    evt.pixel,
+    event.pixel,
     function (feature, _layer) {
       const geometry = feature.getGeometry();
       if (geometry.getType() !== 'Point') {
         return false;
       }
-      openPopupId(feature.getId(), 0, false, true);
+      openPopupId(feature.getId(), false, div2.style.display == 'none');
       return true;
     }
   );
-});
+}, passive);
 
-map.on('pointermove', function (evt) {
-  if (evt.dragging) { return; }
+map.on('pointermove', function (event) {
+  if (event.dragging) { return; }
   const found = map.forEachFeatureAtPixel(
-    map.getEventPixel(evt.originalEvent),
+    map.getEventPixel(event.originalEvent),
     (feature, _layer) => feature.getGeometry().getType() === 'Point'
   );
   map.getTargetElement().style.cursor = found ? 'pointer' : '';
-});
+}, passive);
+
+const tb_exit = document.getElementById('tb_exit');
 
 window.addEventListener('DOMContentLoaded', function (_event) {
-  for (const element of document.querySelectorAll('#menu1 button:last-child')) {
-    if (window.opener) {
-      element.innerHTML = '<span class="one">✖︎</span>';
-      element.addEventListener('click', () => window.close());
-    } else if (history.length > 1) {
-      element.innerText = '戻る';
-      element.addEventListener('click', () => history.back());
-    } else {
-      element.innerText = 'TOP';
-      element.addEventListener('click', () => location.assign('.'));
-    }
+  let text, handler;
+  if (window.opener) {
+    text = '✖︎';
+    handler = () => window.close();
+  } else if (history.length > 1) {
+    text = '戻る';
+    handler = () => history.back();
+  } else {
+    text = 'TOP';
+    handler = () => location.assign('.');
   }
-});
+  tb_exit.innerText = text;
+  tb_exit.addEventListener('click', handler, passive);
+}, passive);
 
 window.addEventListener('load', function (_event) {
-  const img = document.createElement('img');
-  img.setAttribute('src', 'lime/lime.cgi?mountain'); // access counter
-  img.setAttribute('width', 1);
-  img.setAttribute('height', 1);
-  const node = document.querySelector('.navi');
-  node.parentNode.insertBefore(img, node);
-});
+  const img = new Image();
+  img.src = 'lime/lime.cgi?mountain'; // access counter
+  img.width = 1;
+  img.height = 1;
+  tb_exit.parentNode.insertBefore(img, tb_exit);
+}, passive);
 
 window.addEventListener('beforeunload', function (_event) {
   const lon_lat = toLonLat(view.getCenter());
@@ -589,5 +526,5 @@ window.addEventListener('beforeunload', function (_event) {
   for (const key in param) {
     localStorage.setItem(key, param[key]);
   }
-});
-// end of mountain.js
+}, passive);
+// __END__

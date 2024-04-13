@@ -15,25 +15,27 @@
   </head>
   <body>
     <div id="map">
-      <div id="toolbar" class="bar ol-unselectable">
-        <div>
-          <button type="button" title="メニュー" onclick="toggle('menu')"><span class="one">≡</span></button>
-          <button type="button" title="中心座標" onclick="openPopupCenter()"><span class="one">⌖</span></button>
-          <select id="tb-base" title="マップ"></select>
-          <select id="tb-zoom" title="ズーム"></select>
-          <button type="button" onclick="window.print()">印刷</button>
-          <button type="button" class="navi" onclick="window.close()"><span class="one">✖︎</span></button>
+      <div id="centercross"></div>
+      <div id="toolbar">
+        <div id="menu1">
+          <div style="display:flex;">
+            <button id="tb_menu2" title="メニュー" type="button">≡</button>
+            <button id="tb_center" title="中心座標" type="button">⌖</button>
+            <select id="tb_base" title="マップ"></select>
+            <select id="tb_zoom" title="ズーム"></select>
+            <button id="tb_print" title="印刷" onclick="window.print()" type="button">印刷</button>
+            <button id="tb_exit" title="終了" onclick="window.close()" type="button">✖️</button>
+          </div>
         </div>
-        <div id="menu" style="display:none;">
-          <input type="checkbox" onchange="switchTrack(this.checked)" checked>
-          <span>GPSログ</span>
-          <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
-          <span>中心十字</span>
+        <div id="menu2" style="display:none;">
+          <div style="display:flex;">
+            <input id="tb_track" type="checkbox" checked>
+            <label for="tb_track">GPSログ</label>
+            <input id="tb_cross" type="checkbox" checked>
+            <label for="tb_cross">中心十字</label>
+          </div>
         </div>
-      </div><!-- #toolbar -->
-      <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
-        <img src="data:image/gif;base64,R0lGODlhGAAYAPAAAICAgAAAACH5BAEAAAEAIf8LSW1hZ2VNYWdpY2sOZ2FtbWE9MC40NTQ1NDUALAAAAAAYABgAAAIxjI+puwAMk4s0zAovbm9z/4FSJ5Ym4qSpcakq67ZdrJ02WJe5uOOk2fMEN0NM8XYoAAA7" width="24" height="24" alt="">
       </div>
-    </div><!-- #map -->
+    </div>
   </body>
 </html>

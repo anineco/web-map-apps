@@ -18,9 +18,8 @@ import Control from 'ol/control/Control';
 import Popup from 'ol-popup';
 import {install} from 'ga-gtag';
 
-install(process.env.GTAG2);
-const share = 'share/';
-const dburl = share + 'db_poi.php';
+install(process.env.VITE_GTAG2);
+const share = process.env.VITE_SHARE;
 
 const param = { lon: 138.727412, lat: 35.360601, zoom: 12 };
 
@@ -105,8 +104,8 @@ const popup = new Popup();
 map.addOverlay(popup);
 
 const image = [
-  new Icon({ src: share + '952015.png', declutterMode: 'none' }),
-  new Icon({ src: share + '902032.png', declutterMode: 'none' })
+  new Icon({ src: './icon/952015.png', declutterMode: 'none' }),
+  new Icon({ src: './icon/902032.png', declutterMode: 'none' })
 ];
 const fill = [
   new Fill({ color: 'blue' }),
@@ -149,7 +148,7 @@ for (const element of document.querySelectorAll('input.tb-sanmei')) {
   const c = element.value;
   sanmei[c] = new VectorLayer({
     source: new VectorSource({
-      url: dburl + '?cat=' + c,
+      url: share + 'db_poi.php?cat=' + c,
       format: new GeoJSON()
     }),
     title: '山名',
@@ -291,7 +290,7 @@ function openPopup(coordinate) {
     })
   ));
   sources.push(new Promise((resolve) =>
-    fetch(dburl + '?rgc=1&lon=' + lon + '&lat=' + lat)
+    fetch(share + 'db_poi.php?rgc=1&lon=' + lon + '&lat=' + lat)
     .then(response => response.json())
     .then(function (json) {
       result.address = json.length ? json.map(i => i.name) : 'unknown';
@@ -321,7 +320,7 @@ function query(s) {
   }
   count.textContent = '検索中';
   result.style.display = 'block';
-  fetch(dburl, {
+  fetch(share + 'db_poi.php', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: 'q=' + encodeURIComponent(s)
@@ -348,7 +347,7 @@ function query(s) {
 }
 
 function openPopupId(id, c, centering) {
-  fetch(dburl + '?id=' + id + '&c=' + c)
+  fetch(share + 'db_poi.php?id=' + id + '&c=' + c)
   .then(response => response.json())
   .then(function (json) {
     const geo = json.geo[0];

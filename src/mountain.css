@@ -1,7 +1,11 @@
 @charset "UTF-8";
 @import '../node_modules/ol/ol.css';
 @import '../node_modules/ol-popup/src/ol-popup.css';
-@import 'ol-popup-custom.css';
+@import './ol-popup-custom.css';
+@import './centercross.css';
+@import './toolbar.css';
+@import './searchbar.css';
+@import './grid.css';
 :root {
   --ol-foreground-color: white;
   --ol-subtle-foreground-color: white;
@@ -11,122 +15,35 @@
 body {
   font-family: sans-serif;
 }
-#map {
-  position: relative;
-}
-#centercross {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-#toolbar {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 100%;
-  font-size: 0.875rem;
-}
-#searchbar {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 100%;
-  font-size: 0.875rem;
-}
-#menu1,
-#searchbar form {
-  display: flex;
-}
-div.bar > div {
-  padding: 2px 8px;
-  color: var(--ol-foreground-color);
-  background: var(--ol-background-color);
-}
-div.bar > h1 {
-  margin: 0;
-  padding: 2px 8px;
-  font-size: 1rem;
-  text-align: center;
-  color: white;
-  background: rgba(43,69,69,.9);
-}
-#menu1 button:last-child,
-#menu2 button:last-child,
-#searchbar form button:last-child {
-  position: absolute;
-  right: 8px;
-}
-.bar label {
-  display: inline-block;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  margin-top: 2px;
-  margin-bottom: 2px;
-}
-.bar input,
-.bar button,
-.bar select {
-  margin: 2px 3px;
-  padding: 1px 4px;
-  border: none;
-  border-radius: 4px;
-  font-family: sans-serif;
-  font-size: 0.875rem;
-  color: #000;
-  background-color: #fff;
-}
-.bar button {
-  cursor: pointer;
-}
 label,
 button {
+  font-family: sans-serif;
   text-wrap: nowrap;
-}
-#searchbar input {
-  width: 11rem;
 }
 input:read-only {
   color: gray;
 }
-button.navi {
+#map {
+  position: relative;
+}
+#menu1 button:last-child,
+#menu2 button:last-child,
+.ol-searchbar form button:last-child {
+  position: absolute;
+  right: 8px;
+}
+#menu1 button:last-child {
   background-color: #fc9;
   color: blue;
 }
-button.navi a {
-  text-decoration: none;
-}
-.one {
-  display: inline-block;
-  width: 15px;
-  text-align: center;
-  font-family: system-ui;
-}
-@media screen and (min-width: 375px) {
-  #toolbar {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 320px;
-  }
-  #searchbar {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 320px;
-  }
-  div.bar {
-    padding: 2px;
-    border-radius: 4px;
-    background-color: rgba(255,255,255,.4);
-  }
-  div.bar > h1,
-  div.bar > div {
-    margin: 1px;
-    border: 2px;
-    border-radius: 2px;
-  }
-}
+#tb_curr { width: 3rem; }
+#menu3 .c2 { width: 9rem; }
+#menu4 .c2 { width: 4.5rem; }
+#menu4 .c4 { width: 5.5rem; }
+#menu4 .c2-4 { width: 12.5rem; }
+#menu4 .c2-3 { width: 7rem; }
+#menu4 .c4-5 { width: 8.5rem; }
+#tb_query { width: 12.5rem; }
 #result > div {
   max-height: calc(50vh - 150px);
   overflow-y: auto;
@@ -172,14 +89,6 @@ button.navi a {
   text-align: right;
   white-space: nowrap;
 }
-span[data-auth="0"] { color: red; }
-span[data-auth="1"] { color: black; }
-span[data-auth="2"] { color: navy; }
-span[data-auth="3"] { color: purple; }
-span[data-auth="4"] { color: green; }
-span[data-auth="5"] { color: blue; }
-span[data-auth="100"] { color: maroon; }
-span[data-auth="101"] { color: orange; }
 .ol-rotate {
   top: 4rem !important;
   left: .5em !important;

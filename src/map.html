@@ -15,7 +15,8 @@
   </head>
   <body>
     <div id="map">
-      <div id="toolbar" class="bar ol-unselectable">
+      <div id="centercross"></div>
+      <div id="toolbar">
         <h1>地図から選択 —
           <select id="tb-category" title="カテゴリ" onchange="location.replace('map.html?cat='+value);">
             <option value="0">全山行記録</option>
@@ -35,28 +36,31 @@
             <option value="9">足利百名山</option>
           </select>
         </h1>
-        <div>
-          <button type="button" title="メニュー" onclick="toggle('menu')"><span class="one">≡</span></button>
-          <button type="button" title="中心座標" onclick="openPopupCenter()"><span class="one">⌖</span></button>
-          <select id="tb-base" title="マップ"></select>
-          <select id="tb-zoom" title="ズーム"></select>
-          <button type="button" title="ヘルプとクレジット" onclick="window.open('map/help.html')"><span class="one">ⓘ</span></button>
-          <button type="button" class="navi" onclick="location.assign('.')">TOP</button>
+        <div id="menu1">
+          <div style="display:flex;">
+            <button id="tb_menu2" title="メニュー" type="button">≡</button>
+            <button id="tb_center" title="中心座標" type="button">⌖</button>
+            <select id="tb_base" title="マップ"></select>
+            <select id="tb_zoom" title="ズーム"></select>
+            <button id="tb_help" title="ヘルプ" type="button">ⓘ</button>
+            <button id="tb_exit" type="button" type="button"></button>
+          </div>
         </div>
-        <div id="menu" style="display:none;">
-          <input type="checkbox" onchange="switchSanmei(this.checked)" checked>
-          <span>山名</span>
-          <input type="checkbox" onchange="switchElement('crosshair', this.checked)" checked>
-          <span>中心十字</span>
+        <div id="menu2" style="display:none;">
+          <div style="display:flex;">
+            <input id="tb_sanmei" type="checkbox" checked>
+            <label for="tb_sanmei">山名</label>
+            <input id="tb_cross" type="checkbox" checked>
+            <label for="tb_cross">中心十字</label>
+          </div>
         </div>
-      </div><!-- #toolbar -->
-      <div id="crosshair" class="ol-unselectable"><!-- share/crosshair.gif -->
-        <img src="data:image/gif;base64,R0lGODlhGAAYAPAAAICAgAAAACH5BAEAAAEAIf8LSW1hZ2VNYWdpY2sOZ2FtbWE9MC40NTQ1NDUALAAAAAAYABgAAAIxjI+puwAMk4s0zAovbm9z/4FSJ5Ym4qSpcakq67ZdrJ02WJe5uOOk2fMEN0NM8XYoAAA7" width="24" height="24" alt="">
       </div>
-      <div id="searchbar" class="bar ol-unselectable">
-        <div style="height:28px;">
-          <span>山行記録</span>
-          <button type="button" title="表示／非表示" onclick="toggle('result')"><span class="one">⋮</span></button>
+      <div id="searchbar">
+        <div style="display:flex;">
+          <form name="form1" action="">
+            <label for="tb_result">山行記録</label>
+            <button id="tb_result" title="表示／非表示" type="button">≡</button>
+          </form>
         </div>
         <div id="result" style="display:none;">
           <div>
@@ -64,8 +68,8 @@
               <tbody id="items"></tbody>
             </table>
           </div>
-        </div><!-- #result -->
-      </div><!-- #searchbar -->
-    </div><!-- #map -->
+        </div>
+      </div>
+    </div>
   </body>
 </html>

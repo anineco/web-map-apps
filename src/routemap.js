@@ -1,6 +1,6 @@
 // routemap.js
 import View from 'ol/View';
-import {fromLonLat, toLonLat} from 'ol/proj';
+import {fromLonLat} from 'ol/proj';
 import TileLayer from 'ol/layer/Tile';
 import XYZ from 'ol/source/XYZ';
 import Icon from 'ol/style/Icon';
@@ -14,13 +14,13 @@ import GeoJSON from 'ol/format/GeoJSON';
 import Map from 'ol/Map';
 import {defaults} from 'ol/control';
 import ScaleLine from 'ol/control/ScaleLine';
-import Control from 'ol/control/Control';
 import Popup from 'ol-popup';
+import CenterCross from './centercross.js';
+import Toolbar from './toolbar.js';
 import {install} from 'ga-gtag';
 
-install(process.env.GTAG1);
-const share = 'share/';
-const dburl = share + 'db.php';
+install(process.env.VITE_GTAG1);
+const share = process.env.VITE_SHARE;
 
 const param = {
   lon: 138.723345, lat: 35.931243, zoom: 13,
@@ -50,26 +50,26 @@ const attributions = [
 
 const std = new TileLayer({
   source: new XYZ({
-    attributions: attributions,
+    attributions,
     url: 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png'
   }),
   title: '標準',
-  type: 'base'
-});
-
-const pale = new TileLayer({
-  source: new XYZ({
-    attributions: attributions,
-    url: 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png'
-  }),
-  title: '淡色',
   type: 'base',
   visible: false
 });
 
+const pale = new TileLayer({
+  source: new XYZ({
+    attributions,
+    url: 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png'
+  }),
+  title: '淡色',
+  type: 'base'
+});
+
 const seamlessphoto = new TileLayer({
   source: new XYZ({
-    attributions: attributions,
+    attributions,
     url: 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg'
   }),
   title: '写真',
@@ -91,13 +91,8 @@ const otm = new TileLayer({
   visible: false
 });
 
-const fill = new Fill({
-  color: 'blue'
-});
-const stroke = new Stroke({
-  color: 'white',
-  width: 2
-});
+const fill = new Fill({ color: 'blue' });
+const stroke = new Stroke({ color: 'white', width: 2 });
 const font = '14px sans-serif';
 
 function styleFunction(feature) {
@@ -108,7 +103,7 @@ function styleFunction(feature) {
     color[3] = feature.get('_opacity');
     style = {
       stroke: new Stroke({
-        color: color,
+        color,
         width: feature.get('_weight'),
         lineDash: feature.get('_dashArray')?.split(',')
       })
@@ -124,9 +119,9 @@ function styleFunction(feature) {
       }),
       text: new Text({
         text: feature.get('name'),
-        font: font,
-        fill: fill,
-        stroke: stroke,
+        font,
+        fill,
+        stroke,
         textAlign: 'left',
         offsetX: 12,
         offsetY: 3
@@ -145,135 +140,34 @@ const track = new VectorLayer({
   style: styleFunction
 });
 
+const centercross = new CenterCross({ element: document.getElementById('centercross') });
+const toolbar = new Toolbar({ element: document.getElementById('toolbar') });
+// FIXME: If autoPan is enabled, popup.show immediately after setCenter causes uncertain center position.
+const popup = new Popup({ autoPan: false });
+
 const map = new Map({
   target: 'map',
   layers: [std, pale, seamlessphoto, otm, track],
   view: view,
-  controls: defaults().extend([
-    new ScaleLine(),
-    new Control({ element: document.getElementById('toolbar') }),
-    new Control({ element: document.getElementById('crosshair') })
-  ])
+  controls: defaults().extend([ new ScaleLine(), centercross, toolbar ]),
+  overlays: [ popup ]
 });
 
-function toolbarCreateZoom(target) {
-  const element = document.getElementById(target);
-  const zmax = view.getMaxZoom();
-  const zmin = view.getMinZoom();
-  for (let i = 0; i <= zmax - zmin; i++) {
-    const opt = document.createElement('option');
-    element.appendChild(opt).textContent = zmax - i;
-  }
-  element.selectedIndex = zmax - view.getZoom();
-  element.addEventListener('change',
-    function () {
-      view.setZoom(this.options[this.selectedIndex].value);
-    },
-    { passive: true }
-  );
-  map.on('moveend', function () {
-    const i = zmax - view.getZoom();
-    if (element.selectedIndex != i) {
-      element.selectedIndex = i;
-    }
-  });
-}
+const passive = { passive: true };
 
-function toolbarCreateSelector(target) {
-  const element = document.getElementById(target);
-  const layers = map.getLayers().getArray().filter(layer => layer.get('type') == 'base');
-  for (const layer of layers) {
-    const opt = document.createElement('option');
-    opt.selected = layer.getVisible();
-    opt.textContent = layer.get('title');
-    element.appendChild(opt);
-  }
-  element.addEventListener('change',
-    function () {
-      layers.forEach((layer, index) => layer.setVisible(index == this.selectedIndex));
-    },
-    { passive: true }
-  );
-}
+const menu2 = document.getElementById('menu2');
+toolbar.setToggleButton('tb_menu2', menu2);
 
-toolbarCreateZoom('tb-zoom');
-toolbarCreateSelector('tb-base');
+toolbar.setPopup(popup);
+toolbar.setCenterButton('tb_center');
+toolbar.setBaseSelect('tb_base');
+toolbar.setZoomSelect('tb_zoom', (zoom) => view.setZoom(zoom));
+toolbar.setLayerCheckbox('tb_track', track);
+toolbar.setControlCheckbox('tb_cross', centercross);
 
-window.toggle = function (target) {
-  const element = document.getElementById(target);
-  if (element.style.display != 'none') {
-    element.style.display = 'none';
-  } else {
-    element.style.display = 'block';
-  }
-};
-
-window.switchElement = function (target, checked) {
-  const element = document.getElementById(target);
-  element.style.display = checked ? 'block' : 'none';
-};
-
-function toDMS(deg) { // DEG -> DMS
-  const sec = parseInt(deg * 3600 + 0.5);
-  return [ parseInt(sec / 3600), parseInt((sec % 3600) / 60), sec % 60 ];
-}
-
-function formatDMS(dms) {
-  const m = ('0' + dms[1]).slice(-2);
-  const s = ('0' + dms[2]).slice(-2);
-  return dms[0] + '°' + m + '′' + s + '″';
-}
-
-function formatDEG(deg) {
-  return formatDMS(toDMS(deg));
-}
-
-const popup = new Popup();
-map.addOverlay(popup);
-
-function openPopup(coordinate) {
-  const lon_lat = toLonLat(coordinate);
-  const lon = lon_lat[0].toFixed(6);
-  const lat = lon_lat[1].toFixed(6);
-  const result = {
-    lon: formatDEG(lon_lat[0]),
-    lat: formatDEG(lon_lat[1])
-  };
-  const sources = [];
-  const apiurl = 'https://cyberjapandata2.gsi.go.jp/general/dem/scripts/getelevation.php';
-  sources.push(new Promise((resolve) =>
-    fetch(apiurl + '?outtype=JSON&lon=' + lon + '&lat=' + lat)
-    .then(response => response.json())
-    .then(function (json) {
-      result.alt = parseInt(json.elevation + 0.5);
-      resolve();
-    })
-  ));
-  sources.push(new Promise((resolve) =>
-    fetch(dburl + '?rgc=1&lon=' + lon + '&lat=' + lat)
-    .then(response => response.json())
-    .then(function (json) {
-      result.address = json.length ? json.map(i => i.name) : 'unknown';
-      resolve();
-    })
-  ));
-  Promise.all(sources).then(() => {
-    popup.show(coordinate,
-      '<h2>現在地</h2><table><tbody><tr><td>標高</td><td>' + result.alt
-      + 'm<tr><td>緯度</td><td>' + result.lat
-      + '</td></tr><tr><td>経度</td><td>' + result.lon
-      + '</td></tr><tr><td>所在</td><td>' + result.address.join('<br>')
-      + '</td></tr></tbody></table>'
-    );
-  });
-}
-
-window.openPopupCenter = () => { openPopup(view.getCenter()); };
-window.switchTrack = (visible) => { track.setVisible(visible); };
-
-map.on('click', function (evt) {
+map.on('click', function (event) {
   map.forEachFeatureAtPixel(
-    evt.pixel,
+    event.pixel,
     function (feature, _layer) {
       const geometry = feature.getGeometry();
       if (geometry.getType() !== 'Point') {
@@ -292,23 +186,24 @@ map.on('click', function (evt) {
       return true;
     }
   );
-});
+}, passive);
 
-map.on('pointermove', function (evt) {
-  if (evt.dragging) { return; }
+map.on('pointermove', function (event) {
+  if (event.dragging) { return; }
   const found = map.forEachFeatureAtPixel(
-    map.getEventPixel(evt.originalEvent),
+    map.getEventPixel(event.originalEvent),
     (feature, _layer) => feature.getGeometry().getType() === 'Point'
   );
   map.getTargetElement().style.cursor = found ? 'pointer' : '';
-});
+}, passive);
+
+const tb_exit = document.getElementById('tb_exit');
 
 window.addEventListener('load', function (_event) {
   const img = document.createElement('img');
   img.setAttribute('src', 'lime/lime.cgi?routemap'); // access counter
   img.setAttribute('width', 1);
   img.setAttribute('height', 1);
-  const node = document.querySelector('.navi');
-  node.parentNode.insertBefore(img, node);
-});
-// end of routemap.js
+  tb_exit.parentNode.insertBefore(img, tb_exit);
+}, passive);
+// __END__

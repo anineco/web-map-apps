@@ -1,7 +1,11 @@
 @charset "UTF-8";
 @import '../node_modules/ol/ol.css';
 @import '../node_modules/ol-popup/src/ol-popup.css';
-@import 'ol-popup-custom.css';
+@import './ol-popup-custom.css';
+@import './centercross.css';
+@import './toolbar.css';
+@import './searchbar.css';
+@import './grid.css';
 :root {
   --ol-foreground-color: white;
   --ol-subtle-foreground-color: white;
@@ -11,79 +15,79 @@
 body {
   font-family: sans-serif;
 }
+label,
+button {
+  font-family: sans-serif;
+  text-wrap: nowrap;
+}
+input:read-only {
+  color: gray;
+}
 #map {
   position: relative;
 }
-#crosshair {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-#toolbar {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 100%;
-  font-size: 0.875rem;
-}
-#toolbar > div {
-  display: flex;
-}
-div.bar > div {
-  padding: 2px 8px;
-  color: var(--ol-foreground-color);
-  background: var(--ol-background-color);
-}
-.bar button:last-child {
+#menu1 button:last-child,
+#menu2 button:last-child,
+.ol-searchbar form button:last-child {
   position: absolute;
   right: 8px;
 }
-.bar input,
-.bar button,
-.bar select {
-  margin: 2px 4px;
-  padding: 1px 4px;
-  border: none;
-  border-radius: 4px;
-  font-family: sans-serif;
-  font-size: 0.875rem;
-  color: #000;
-  background-color: #fff;
-}
-.bar button {
-  cursor: pointer;
-}
-button.navi {
+#menu1 button:last-child {
   background-color: #fc9;
   color: blue;
 }
-button.navi a {
-  text-decoration: none;
+#tb_curr { width: 3rem; }
+#menu3 .c2 { width: 9rem; }
+#menu4 .c2 { width: 4.5rem; }
+#menu4 .c4 { width: 5.5rem; }
+#menu4 .c2-4 { width: 12.5rem; }
+#menu4 .c2-3 { width: 7rem; }
+#menu4 .c4-5 { width: 8.5rem; }
+#tb_query { width: 12.5rem; }
+#result > div {
+  max-height: calc(50vh - 150px);
+  overflow-y: auto;
 }
-.one {
-  display: inline-block;
-  width: 15px;
-  text-align: center;
-  font-family: system-ui;
+@media screen and (min-width: 865px) {
+  #result > div {
+    max-height: calc(100vh - 480px);
+  }
 }
-@media screen and (min-width: 375px) {
-  #toolbar {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 320px;
-  }
-  div.bar {
-    padding: 2px;
-    border-radius: 4px;
-    background-color: rgba(255,255,255,.4);
-  }
-  div.bar > div {
-    margin: 1px;
-    border: 2px;
-    border-radius: 2px;
-  }
+#menu3 table,
+#menu3 th,
+#menu3 td {
+  border-style: none;
+  border-collapse: collapse;
+}
+#result table,
+#result th,
+#result td {
+  border: 1px solid gray;
+  border-collapse: collapse;
+  font-weight: normal;
+  line-height: 1rem;
+}
+#result th:nth-child(1) {
+  width: 3rem;
+}
+#result th:nth-child(2) {
+  width: 11rem;
+}
+#result th:nth-child(3) {
+  width: 2rem;
+}
+#result td:nth-child(1) {
+  text-align: right;
+  text-decoration: underline;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#result td:nth-child(2) {
+  text-align: left;
+}
+#result td:nth-child(3) {
+  text-align: right;
+  white-space: nowrap;
 }
 .ol-rotate {
   top: 4rem !important;
@@ -93,18 +97,16 @@ button.navi a {
 .ol-touch .ol-rotate {
   top: 5rem;
 }
-@media screen and (max-width: 374px) {
-  .ol-zoom, .ol-rotate {
+.ol-attribution {
+  display: none;
+}
+@media screen and (max-width: 760px) {
+  .ol-scale-line {
     display: none;
   }
 }
-@media print { /* A4横 */
-  body {
-    width: 251mm;
-    height: 172mm;
-    position: relative;
-  }
-  .ol-control, .ol-scale-line, #toolbar {
+@media screen and (max-width: 374px) {
+  .ol-zoom, .ol-rotate {
     display: none;
   }
 }
