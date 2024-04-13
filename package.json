@@ -2,12 +2,12 @@
   "name": "web-map-apps",
   "version": "1.0.0",
   "description": "Web map applications using OpenLayers",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint 'src/*.js'",
-    "start": "parcel --no-source-maps 'src/*.html'",
-    "prebuild": "rm -f dist/*.*.*",
-    "build": "parcel build --no-cache --no-source-maps --public-url . 'src/*.html'"
+    "preview": "vite preview --mode=development ",
+    "build": "vite build --mode=production --emptyOutDir"
   },
   "repository": {
     "type": "git",
@@ -21,9 +21,11 @@
   "homepage": "https://github.com/anineco/web-map-apps#readme",
   "devDependencies": {
     "cssnano": "^6.1.2",
-    "eslint": "^8.57.0",
+    "eslint": "^9.0.0",
+    "globals": "^15.0.0",
     "is-svg": ">=5.0.0",
-    "parcel": "^2.12.0"
+    "vite": "^5.2.8",
+    "vite-plugin-env-compatible": "^2.0.1"
   },
   "dependencies": {
     "ga-gtag": "^1.2.0",
