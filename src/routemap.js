@@ -23,7 +23,7 @@ install(process.env.VITE_GTAG1);
 const share = process.env.VITE_SHARE;
 
 const param = {
-  lon: 138.723345, lat: 35.931243, zoom: 13,
+  lon: 138.723345, lat: 35.931243, zoom: 13, map: 0,
   url: share + 'routemap.geojson'
 };
 
@@ -55,7 +55,7 @@ const std = new TileLayer({
   }),
   title: '標準',
   type: 'base',
-  visible: false
+  visible: param.map == 0
 });
 
 const pale = new TileLayer({
@@ -64,7 +64,8 @@ const pale = new TileLayer({
     url: 'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png'
   }),
   title: '淡色',
-  type: 'base'
+  type: 'base',
+  visible: param.map == 1
 });
 
 const seamlessphoto = new TileLayer({
@@ -74,7 +75,7 @@ const seamlessphoto = new TileLayer({
   }),
   title: '写真',
   type: 'base',
-  visible: false
+  visible: param.map == 2
 });
 
 const otm = new TileLayer({
@@ -88,7 +89,7 @@ const otm = new TileLayer({
   }),
   title: 'OTM',
   type: 'base',
-  visible: false
+  visible: param.map == 3
 });
 
 const fill = new Fill({ color: 'blue' });
