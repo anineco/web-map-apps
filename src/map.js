@@ -24,64 +24,59 @@ import {install} from 'ga-gtag';
 install(process.env.VITE_GTAG1);
 const share = process.env.VITE_SHARE;
 
-const init = [
-// lat, lon, zoom, index, title
-  [ 36.4967, 139.3318,  12,  0 ], // 全山行記録
-  [ 36.5439, 138.9261,   9,  2 ], // 日本三百名山
-  [ 36.5493, 138.9261,  10,  3 ], // ぐんま百名山
-  [ 36.7332, 139.7925,  10,  5 ], // 栃木百名山
-  [ 36.4967, 139.3318,  12, 13 ], // 桐生地域百山
-  [ 36.1019, 138.0629,   9,  8 ], // 信州百名山
-  [ 35.5747, 138.6364,  10,  9 ], // 山梨百名山
-  [ 37.4422, 140.1566,   9, 10 ], // うつくしま百名山
-  [ 36.0110, 139.0491,  11,  6 ], // 埼玉百山
-  [ 36.3690, 139.4490,  12, 14 ], // 足利百名山
-  [ 37.6869, 138.8786,   9, 12 ], // 越後百山
-  [ 36.5493, 138.9261,  10,  4 ], // 群馬300山
-  [ 37.4422, 140.1566,   9, 11 ], // 新うつくしま百名山
-  [ 35.4036, 139.3492,  11,  7 ], // かながわ百名山
-  [ 36.5439, 138.9261,   9,  1 ]  // 日本の主な山岳
+const category = [
+//      lat,      lon, zoom, cat, title
+  [ 36.4967, 139.3318,   12,   0, '全山行記録'         ],
+  [ 36.5439, 138.9261,    9,  14, '日本の主な山岳'     ],
+  [ 36.5439, 138.9261,    9,   1, '日本三百名山'       ],
+  [ 36.5493, 138.9261,   10,   2, 'ぐんま百名山'       ],
+  [ 36.5493, 138.9261,   10,  11, '群馬300山'          ],
+  [ 36.7332, 139.7925,   10,   3, '栃木百名山'         ],
+  [ 36.0110, 139.0491,   11,   8, '埼玉百山'           ],
+  [ 35.4036, 139.3492,   11,  13, 'かながわ百名山'     ],
+  [ 36.1019, 138.0629,    9,   5, '信州百名山'         ],
+  [ 35.5747, 138.6364,   10,   6, '山梨百名山'         ],
+  [ 37.4422, 140.1566,    9,   7, 'うつくしま百名山'   ],
+  [ 37.4422, 140.1566,    9,  12, '新うつくしま百名山' ],
+  [ 37.6869, 138.8786,    9,  10, '越後百山'           ],
+  [ 36.4967, 139.3318,   12,   4, '桐生地域百山'       ],
+  [ 36.3690, 139.4490,   12,   9, '足利百名山'         ]
 ];
-const param = { lat: undefined, lon: undefined, zoom: undefined, cat: 1 };
+const param = { idx: 1, lat: undefined, lon: undefined, zoom: undefined, cat: undefined };
 
 for (const arg of location.search.slice(1).split('&')) {
   const s = arg.split('=');
-  if (s[0] === 'cat') {
+  if (s[0] in param) {
     param[s[0]] = Number(s[1]);
   }
 }
-if (param.cat < 0 || param.cat >= init.length) {
-  param.cat = 1;
+if (param.idx < 0 || param.idx >= category.length) {
+  param.idx = 1;
 }
-const category = init[param.cat];
-const cat = localStorage.getItem('cat');
-if ((param.cat >= 0 || param.cat <= 1) && param.cat === cat) {
+
+const idx = localStorage.getItem('idx');
+if (param.idx == idx) {
   for (const key in param) {
     param[key] = localStorage.getItem(key);
   }
 } else {
-  param.lat = category[0];
-  param.lon = category[1];
-  param.zoom = category[2];
+  const c = category[param.idx];
+  param.lat = c[0];
+  param.lon = c[1];
+  param.zoom = c[2];
+  param.cat = c[3];
 }
 
 window.addEventListener('DOMContentLoaded', function () {
-  document.getElementById('tb-category').selectedIndex = category[3];
+  const element = document.getElementById('tb_category');
+  for (const c of category) {
+    element.appendChild(new Option(c[4]));
+  }
+  element.selectedIndex = param.idx;
+  element.addEventListener('change', _event => {
+    location.replace('map.html?idx=' + element.selectedIndex);
+  });
 });
-
-// min_zoom_list[grade]: minimal displayable zoom for grade
-/*
-const min_zoom_list = [
-  13, // 0: contour line
-  13, // 1: other source
-  12, // 2: elevation point
-  11, // 3: 4th-order triangulation point
-  10, // 4: 3rd-order triangulation point
-  9,  // 5: 2nd-order triangulation point
-  8,  // 6: 1st-order triangulation point
-  8   // 7: GPS-based control station
-];
-*/
 
 // minimal displayable grade for zoom
 function minGradeForZoom(zoom) {
