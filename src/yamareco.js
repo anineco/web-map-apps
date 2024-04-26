@@ -438,4 +438,4 @@ window.addEventListener('beforeunload', function (_event) {
     localStorage.setItem(key, param[key]);
   }
 });
-// end of yamareco.js
+// __END__

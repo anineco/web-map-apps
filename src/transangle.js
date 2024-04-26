@@ -44,4 +44,4 @@ export function fromStringYX(s) {
   return null;
 }
 
-// end of transangle.js
+// __END__

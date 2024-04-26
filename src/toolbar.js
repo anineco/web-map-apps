@@ -158,4 +158,4 @@ export default class Toolbar extends Control {
     }, passive);
   }
 }
-// end of toolbar.js
+// __END__
