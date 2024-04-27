@@ -33,7 +33,7 @@ figure {
 <img src="map/Fig01.png" srcset="map/2x/Fig01.png 2x" width="375" height="667" alt="">
 <figcaption>図1 スマートフォンによる表示例</figcaption>
 </figure>
-<p>青字または黄色字の山名や、<img src="symbols/Summit.png" width="24" height="24" alt="山頂">のアイコンをクリックすると、その山の情報がポップアップで表示され、登頂した山行記録を検索して表示します（図2）。ポップアップは右上の ✖︎ をクリックすると消えます。検索結果の山行記録をクリックすると、当該ページにジャンプします。なお、青字は検索結果が1件以上ある山、黄色字（図1では右下の"観音山"や"庚申山"）は山行記録がない山を表します。</p>
+<p>青字または黄色字の山名や、山頂のアイコンをクリックすると、その山の情報がポップアップで表示され、登頂した山行記録を検索して表示します（図2）。ポップアップは右上の ✖︎ をクリックすると消えます。検索結果の山行記録をクリックすると、当該ページにジャンプします。なお、青字は検索結果が1件以上ある山、黄色字（図1では右下の"観音山"）は山行記録がない山を表します。</p>
 <figure>
 <img src="map/Fig02.png" srcset="map/2x/Fig02.png 2x" width="375" height="667" alt="">
 <figcaption>図2 ポップアップと山行記録の表示</figcaption>
@@ -44,14 +44,15 @@ figure {
 <img src="map/Fig03.png" srcset="map/2x/Fig03.png 2x" width="375" height="667" alt="">
 <figcaption>図3 ボタンとチェックボックスの配置</figcaption>
 </figure>
-<p><span style="color:red;">①</span> 下段のメニュー（<span style="color:red;">⑥</span>、<span style="color:red;">⑦</span>）の表示をオン／オフ。<br>
+<p><span style="color:red;">①</span> 下段のメニュー（<span style="color:red;">⑦</span>、<span style="color:red;">⑧</span>）の表示をオン／オフ。<br>
 <span style="color:red;">②</span> 十字線で示される中心位置にポップアップを表示（図4）。<br>
 <span style="color:red;">③</span> ベースマップ（標準、淡色、写真、OTM）を選択。<br>
 <span style="color:red;">④</span> ズームレベルを選択。<br>
 <span style="color:red;">⑤</span> このページを表示。<br>
-<span style="color:red;">⑥</span> 山名とアイコンの表示をオン／オフ。<br>
-<span style="color:red;">⑦</span> 中心位置の十字線の表示をオン／オフ。<br>
-<span style="color:red;">⑧</span> 山行記録の表示を一時的にオン／オフ。</p>
+<span style="color:red;">⑥</span> カテゴリを選択。<br>
+<span style="color:red;">⑦</span> 山名とアイコンの表示をオン／オフ。<br>
+<span style="color:red;">⑧</span> 中心位置の十字線の表示をオン／オフ。<br>
+<span style="color:red;">⑨</span> 山行記録の表示を一時的にオン／オフ。</p>
 <figure>
 <img src="map/Fig04.png" srcset="map/2x/Fig04.png 2x" width="375" height="667" alt="">
 <figcaption>図4 中心位置のポップアップ</figcaption>
@@ -95,6 +96,7 @@ figure {
 <p>その他、下記のデータ、ウェブサービス、コードを利用している。</p>
 <ul>
 <li><a href="https://nlftp.mlit.go.jp/">国土数値情報</a>（国土交通省）の行政区域データ（加工して利用）</li>
+<li><a href="https://www.gsi.go.jp/kiban/">基盤地図情報</a>（国土地理院）の「測量の基準点」「標高点」のデータ（加工して利用）</li>
 <li><a href="https://maps.gsi.go.jp/development/elevation_s.html">地理院標高API</a></li>
 <li><a href="https://openlayers.org/">OpenLayers</a></li>
 <li><a href="https://github.com/walkermatt/ol-popup">OpenLayers Popup</a></li>
