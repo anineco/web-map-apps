@@ -80,7 +80,8 @@ window.addEventListener('DOMContentLoaded', function () {
 
 // minimal displayable grade for zoom
 function minGradeForZoom(zoom) {
-  return zoom >= 13 ? 0 : (zoom <= 8 ? 6 : 14 - zoom);
+//return zoom >= 13 ? 0 : (zoom <= 8 ? 6 : 14 - zoom);
+  return zoom >= 11 ? 0 : (zoom <= 6 ? 6 : 12 - zoom);
 }
 
 // minimun displayable level (=grade<<3) for current zoom
@@ -161,7 +162,7 @@ const offsetY = 3;
 
 function styleFunction(feature) {
   const level = feature.get('p');
-  if (level < min_level - 2) { // NOTE: レベルを緩和
+  if (level < min_level) {
     return null;
   }
   const i = feature.get('c') > 0 ? 0 : 1;
@@ -223,6 +224,8 @@ function interval(start, end) {
 }
 
 const result = document.getElementById('result');
+toolbar.setToggleButton('tb_result', result);
+
 const items = document.getElementById('items');
 
 function showRecords(recs) {
