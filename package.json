@@ -21,11 +21,11 @@
   },
   "homepage": "https://github.com/anineco/web-map-apps#readme",
   "devDependencies": {
-    "cssnano": "^7.0.0",
-    "eslint": "^9.1.1",
-    "globals": "^15.0.0",
+    "cssnano": "^7.0.1",
+    "eslint": "^9.2.0",
+    "globals": "^15.1.0",
     "is-svg": ">=5.0.0",
-    "vite": "^5.2.10",
+    "vite": "^5.2.11",
     "vite-plugin-env-compatible": "^2.0.1"
   },
   "dependencies": {
