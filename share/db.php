@@ -91,7 +91,7 @@ EOS;
 
   $sql = <<<'EOS'
 UPDATE geom,(SELECT * FROM gcp WHERE ST_Within(pt,@buf) ORDER BY alt DESC LIMIT 1) AS s
-SET geom.pt=s.pt,geom.alt=s.alt,geom.level=geom.level+s.grade
+SET geom.pt=s.pt,geom.alt=s.alt,geom.level=geom.level+s.grade,geom.gcpname=s.name
 WHERE id=@ID AND s.grade IS NOT NULL
 EOS;
   $dbh->exec($sql);
@@ -150,7 +150,7 @@ EOS;
   #
   # 更新された山名情報を返す
   #
-  $sth = $dbh->prepare('SELECT id,kana,name,alt,lat,lon,auth FROM geom WHERE id=@ID');
+  $sth = $dbh->prepare('SELECT id,kana,name,alt,lat,lon,auth,gcpname FROM geom WHERE id=@ID');
   $sth->execute();
   $geo = $sth->fetchAll(PDO::FETCH_ASSOC);
   $sth = null;
@@ -423,7 +423,7 @@ if ($mode == 'rec' && $c > 0) {
   # 名山カテゴリを指定してREC検索
   #
   $sql = <<<'EOS'
-SELECT id,m.kana,m.name,alt,lat,lon,level,auth FROM geom
+SELECT id,m.kana,m.name,alt,lat,lon,level,auth,gcpname FROM geom
 JOIN (
  SELECT id,kana,name FROM meizan
  WHERE cat=?
@@ -439,7 +439,7 @@ EOS;
     # ID/REC検索
     #
     $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon,level,auth FROM geom
+SELECT id,kana,name,alt,lat,lon,level,auth,gcpname FROM geom
 WHERE id=?
 EOS;
     $sth = $dbh->prepare($sql);
@@ -449,7 +449,7 @@ EOS;
     # 最新の登録
     #
     $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon,level,auth FROM geom
+SELECT id,kana,name,alt,lat,lon,level,auth,gcpname FROM geom
 ORDER BY id DESC
 LIMIT 100
 EOS;
@@ -472,7 +472,7 @@ EOS;
     # 山名＋所在地検索
     #
     $sql = <<<EOS
-SELECT DISTINCT id,kana,name,alt,lat,lon,level,auth FROM geom
+SELECT DISTINCT id,kana,name,alt,lat,lon,level,auth,gcpname FROM geom
 JOIN (
  SELECT id FROM sanmei
  WHERE name$eq?
@@ -493,7 +493,7 @@ EOS;
     # 山名検索
     #
     $sql = <<<EOS
-SELECT DISTINCT id,kana,name,alt,lat,lon,level,auth FROM geom
+SELECT DISTINCT id,kana,name,alt,lat,lon,level,auth,gcpname FROM geom
 JOIN (
  SELECT id FROM sanmei
  WHERE name$eq?

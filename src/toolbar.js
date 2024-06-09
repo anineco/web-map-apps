@@ -68,8 +68,9 @@ export default class Toolbar extends Control {
           '</td></tr><tr><td>別名</td><td>' + geo.alias.map(
             alias => '<ruby>' + alias.name + '<rt>' + alias.kana + '</rt></ruby>'
           ).join('<br>') : '')
-      + '</td></tr><tr><td>標高</td><td>' + geo.alt
-      + 'm</td></tr><tr><td>緯度</td><td>' + geo.y
+      + '</td></tr><tr><td>標高</td><td>' + geo.alt + 'm'
+      + (geo.gcpname ? '</td></tr><tr><td>点名</td><td>' + geo.gcpname : '')
+      + '</td></tr><tr><td>緯度</td><td>' + geo.y
       + '</td></tr><tr><td>経度</td><td>' + geo.x
       + (geo.address.length > 0 ?
         '</td></tr><tr><td>所在</td><td>' + geo.address.join('<br>') : '')

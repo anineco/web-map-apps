@@ -266,6 +266,7 @@ function openPopupId(id, center, pop) {
       view.setCenter(coordinate);
     }
     if (pop) {
+      geo.gcpname = null; // 点名は表示しない
       toolbar.openPopupName(coordinate, geo);
     }
     showRecords(json.rec);
