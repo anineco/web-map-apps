@@ -194,8 +194,8 @@ function setPanel(geo) {
       panel[`name${i}`].value = geo.alias[i].name;
       panel[`kana${i}`].value = geo.alias[i].kana;
     } else {
-      panel[`name${i}`].value = null;
-      panel[`kana${i}`].value = null;
+      panel[`name${i}`].value = '';
+      panel[`kana${i}`].value = '';
     }
   }
 }
@@ -364,6 +364,10 @@ document.getElementById('tb_new').addEventListener('click', function (_event) {
   currId.value =  0;
   panel.name.value = '';
   panel.kana.value = '';
+  for (let i = 0; i < 3; i++) {
+    panel[`name${i}`].value = '';
+    panel[`kana${i}`].value = '';
+  }
   readCenter();
 }, passive);
 
