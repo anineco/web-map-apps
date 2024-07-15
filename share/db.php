@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   #
   # 新規登録・修正
   #
-  if (!isset($_SESSION['username'])) {
+  $token = filter_input(INPUT_POST, 'token');
+  if (!isset($_SESSION['username']) || $_SESSION['token'] != $token) {
     $dbh = null;
     http_response_code(403); # Forbidden
     exit;

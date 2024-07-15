@@ -302,25 +302,15 @@ document.getElementById('tb_login').addEventListener('click', function (_event) 
     .then(response => response.text())
     .then(function (text) {
       if (text === 'SUCCESS') {
+        panel.token.value = '';
         alert('ログアウトしました');
       }
       div2.style.display = 'none';
     });
     return;
   }
-  // ログイン中か確認する
-  fetch(share + 'login.php')
-  .then(response => response.text())
-  .then(function (text) {
-    if (text === 'SUCCESS') {
-      div1.style.display = 'none';
-      div2.style.display = 'block';
-      toolbar.closePopup();
-    } else {
-      div2.style.display = 'none';
-      div1.style.display = 'block';
-    }
-  });
+  // ログイン画面を開く
+  div1.style.display = 'block';
 }, passive);
 
 // ログイン処理
@@ -329,14 +319,16 @@ document.forms.login.addEventListener('submit', function (event) {
     method: 'POST',
     body: new FormData(event.target)
   })
-  .then(response => response.text())
-  .then(function (text) {
-    if (text === 'SUCCESS') {
+  .then(response => response.json())
+  .then(function (json) {
+    if (json.status === 'SUCCESS') {
+      panel.token.value = json.token;
       alert('ログイン成功');
       div1.style.display = 'none';
       div2.style.display = 'block';
       toolbar.closePopup();
     } else {
+      panel.token.value = '';
       alert('ログイン失敗');
     }
   });
