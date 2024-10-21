@@ -454,10 +454,11 @@ document.forms.form1.addEventListener('submit', function (event) {
 });
 
 document.forms.form2.addEventListener('submit', function (event) {
-  const csv = 'ID,山名,よみ,標高,緯度,経度,備考\n' + result_json.geo.map(x => [
-    x.id, x.name, x.kana, x.alt, x.lat, x.lon, ''
-  ].join()).join('\n') + '\n';
-  const b = new Blob([ csv ], { type: 'text/csv' });
+  const csv = (event.target.elements.bom.checked ? '\uFEFF' : '')
+    + 'ID,山名,よみ,標高,緯度,経度,備考\n'
+    + result_json.geo.map(x => [ x.id, x.name, x.kana, x.alt, x.lat, x.lon, '' ].join()).join('\n')
+    + '\n';
+  const b = new Blob([ csv ], { type: 'text/csv;charset=UTF-8' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(b);
   a.download = 'result.csv';

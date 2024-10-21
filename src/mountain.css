@@ -28,7 +28,7 @@ input:read-only {
 }
 #menu1 button:last-child,
 #menu2 button:last-child,
-.ol-searchbar form button:last-child {
+.ol-searchbar form div:last-child {
   position: absolute;
   right: 8px;
 }

@@ -37,7 +37,7 @@ figure {
 <p>情報の正確性と精度には留意しておりますが、誤りがありましたら<a href="https://map.jpn.org/bbs/">サポート掲示板</a>でお知らせ下さい。未登録の山の情報や、このサイトに関するご意見・ご質問もサポート掲示板へお願いします。</p>
 <h2>ヘルプ</h2>
 <p>例として、本サイトをスマートフォンで表示した場合の画面を図1に示します。PCで表示した場合はレイアウトが変わりますが、操作方法は基本的に同じです。地図をスムーズにスクロールしたり、ズームしたり、回転させることができます。PCの場合の回転は、Shift+Altキーとマウス右ボタンを同時に押しながらマウスカーソルを動かして行います。</p>
-<p>なお、山頂アイコンは、<img src="share/902030.png">が基準点（電子基準点、一等〜四等三角点）、<img src="share/902031.png">が標高点、<img src="share/902029.png">がその他を表します。また、図1にある<span style="color:blue;">榛名山・掃部ヶ岳</span>のような"・"を含む山名は、<span style="color:blue;">総称・ピーク名</span>を表します。総称は原則として山域の最高峰に付記されます。</p>
+<p>なお、山頂アイコンは、<img src="share/902030.png" alt="">が基準点（電子基準点、一等〜四等三角点）、<img src="share/902031.png" alt="">が標高点、<img src="share/902029.png" alt="">がその他を表します。また、図1にある<span style="color:blue;">榛名山・掃部ヶ岳</span>のような"・"を含む山名は、<span style="color:blue;">総称・ピーク名</span>を表します。総称は原則として山域の最高峰に付記されます。</p>
 <figure>
 <img src="mountain/Fig01.png" srcset="mountain/2x/Fig01.png 2x" width="375" height="667" alt="">
 <figcaption>図1 スマートフォンによる表示例</figcaption>
@@ -78,7 +78,7 @@ figure {
 <p><span style="color:blue;">%</span>：山名の先頭や末尾に指定し、任意の文字列を表します。例えば、"<span style="color:blue;">%猫%</span>"で検索すると、漢字の"猫"を含む山名の一覧を表示します。なお、検索結果の件数の上限は1000で、上限を越えた分は表示しません。<br>
 <span style="color:blue;">＠</span>：山名に続いて指定し、続けて所在を記述すると、所在についての前方一致検索を行なって、検索結果を限定します。例えば、"<span style="color:blue;">%@群馬県桐生市</span>"で検索すれば、群馬県桐生市にある山の一覧を表示します。</p>
 <p>その他、検索文字列を数値とすると、数値に一致するIDをもつ山を検索します。特に"<span style="color:blue;">0</span>"で検索すると、最も大きなIDから100件を表示します。これはデータベースに新規に登録した山の確認に用いています。</p>
-<p>"保存"ボタンをクリックすると、検索結果をCSVファイルでダウンロードできます。CSVファイル内の文字コードはUTF-8、緯度、経度はDEG形式（10進表記）です。</p>
+<p>"保存"ボタンをクリックすると、検索結果をCSVファイルでダウンロードして保存できます。ファイル内の文字コードはUTF-8です。Microsoft Excelで読み込む場合は、"BOM"欄にチェックを入れて保存してください。<a href="https://w.wiki/3zyd">Byte Order Mark</a>がファイルの先頭に付加されます。緯度、経度はDEG形式（10進表記）です。</p>
 <h2>クレジット表記</h2>
 <p>この地図の作成にあたっては、国土地理院長の承認を得て、同院発行の数値地図25000（地名・公共施設）を使用した。（承認番号 平29情使、第1007号）</p>
 <p>また、使用しているタイル画像のクレジットは次の表のとおり。</p>
@@ -86,8 +86,8 @@ figure {
 <thead><tr><th>ベースマップ</th><th>クレジット</th></tr></thead>
 <tbody>
 <tr><td>標準、淡色、写真</td><td><a href="https://maps.gsi.go.jp/development/ichiran.html">地理院タイル</a></td></tr>
-<tr><td>OTM</td><td>&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors,
-&copy; <a href="https://opentopomap.org/">OpenTopoMap</a>
+<tr><td>OTM</td><td>© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors,
+© <a href="https://opentopomap.org/">OpenTopoMap</a>
 (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)</td></tr>
 </tbody>
 </table>
