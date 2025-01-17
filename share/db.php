@@ -1,6 +1,8 @@
 <?php
 session_start();
-$cf = parse_ini_file('/home/anineco/.my.cnf'); # 🔖 設定ファイル
+$id = posix_getuid(); # user id
+$home = posix_getpwuid($id)['dir']; # home directory
+$cf = parse_ini_file($home . '/.my.cnf'); # 🔖 設定ファイル
 $dsn = "mysql:dbname=$cf[database];host=$cf[host];charset=utf8mb4";
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 
