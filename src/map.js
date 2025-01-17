@@ -250,6 +250,7 @@ function openPopupId(id, center, pop) {
     }
     if (pop) {
       geo.gcpname = null; // 点名は表示しない
+      geo.alias = []; // 別名は表示しない
       toolbar.openPopupName(coordinate, geo);
     }
     showRecords(json.rec);
