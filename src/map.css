@@ -106,7 +106,7 @@ input:read-only {
 .ol-attribution {
   display: none;
 }
-@media screen and (max-width: 760px) {
+@media screen and (max-width: 699px) {
   .ol-scale-line {
     display: none;
   }
