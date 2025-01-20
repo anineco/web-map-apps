@@ -100,11 +100,6 @@ input:read-only {
 .ol-attribution {
   display: none;
 }
-@media screen and (max-width: 760px) {
-  .ol-scale-line {
-    display: none;
-  }
-}
 @media screen and (max-width: 374px) {
   .ol-zoom, .ol-rotate {
     display: none;
