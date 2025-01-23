@@ -300,8 +300,9 @@ EOS;
 
 $rgc = filter_input(INPUT_GET, 'rgc');
 $zu = filter_input(INPUT_GET, 'zu');
+$mt = filter_input(INPUT_GET, 'mt');
 
-if (isset($rgc) || isset($zu)) {
+if (isset($rgc) || isset($zu) || isset($mt)) {
   #
   # 逆ジオコーディング
   #
@@ -317,7 +318,7 @@ if (isset($rgc) || isset($zu)) {
     exit;
   }
   $sql = <<<'EOS'
-SET @pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */)
+SET @g=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */)
 EOS;
   $sth = $dbh->prepare($sql);
   $sth->bindValue(1, "POINT($lon $lat)");
@@ -330,16 +331,26 @@ EOS;
     $sql = <<<'EOS'
 SELECT code,name FROM gyosei
 LEFT JOIN city USING (code)
-WHERE ST_Contains(area,@pt)
+WHERE ST_Contains(area,@g)
 EOS;
-  } else {
+  } elseif (isset($zu)) {
     #
     # 地形図名
     #
     $sql = <<<'EOS'
 SELECT type,mapno,name FROM zumei
-WHERE ST_Contains(area,@pt)
+WHERE ST_Contains(area,@g)
 ORDER BY type DESC
+EOS;
+  } else {
+    #
+    # 最寄りの山名
+    #
+
+    # NOTE: ST_Distance_Sphere() is not available in MySQL 5.7, use ST_Distance() instead
+    $sql = <<<'EOS'
+SELECT id,name,ST_Distance_Sphere(pt,@g) AS d FROM geom
+ORDER BY d LIMIT 1
 EOS;
   }
   $sth = $dbh->query($sql);
