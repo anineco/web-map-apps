@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint 'src/*.js'",
-    "dev": "vite",
-    "build": "vite build --emptyOutDir",
+    "dev": "vite build --emptyOutDir --mode development",
+    "build": "vite build --emptyOutDir --mode production",
     "preview": "vite preview"
   },
   "repository": {
