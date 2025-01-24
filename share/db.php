@@ -1,8 +1,8 @@
 <?php
 session_start();
+# NOTE: if posix functions are not available, set $home manually
 $uid = posix_getuid(); # user id
 $home = posix_getpwuid($uid)['dir']; # home directory
-# NOTE: if posix functions are disabled, set $home manually
 $cf = parse_ini_file($home . '/.my.cnf'); # 🔖 設定ファイル
 $dsn = "mysql:dbname=$cf[database];host=$cf[host];charset=utf8mb4";
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
@@ -10,7 +10,10 @@ $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 # 🔖 位置の許容誤差
 # MySQL8: 40[m]
 # MySQL5: 0.00036[°] = 1.3[″]
-$dbh->exec('SET @EPS=IF(0/*!80003 +1 */,40,0.00036)');
+$sql = <<<'EOS'
+SET @EPS=IF(0/*!80003 +1 */,40,0.00036)
+EOS;
+$dbh->exec($sql);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   #
@@ -49,7 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     #
     # 修正
     #
-    $sth = $dbh->prepare('SET @ID=?');
+    $sql = <<<'EOS'
+SET @ID=?
+EOS;
+    $sth = $dbh->prepare($sql);
     $sth->bindValue(1, $id, PDO::PARAM_INT);
     $sth->execute();
     $sth = null;
@@ -78,13 +84,19 @@ EOS;
   $sth = null;
 
   if ($id == 0) {
-    $dbh->exec('SET @ID=LAST_INSERT_ID()');
+    $sql = <<<'EOS'
+SET @ID=LAST_INSERT_ID()
+EOS;
+    $dbh->exec($sql);
   }
 
   #
   # 基準点による調整
   #
-  $dbh->exec('SELECT ST_Buffer(pt,@EPS) INTO @buf FROM geom WHERE id=@ID');
+  $sql = <<<'EOS'
+SELECT ST_Buffer(pt,@EPS) INTO @buf FROM geom WHERE id=@ID
+EOS;
+  $dbh->exec($sql);
 
   $sql = <<<'EOS'
 UPDATE geom,(SELECT * FROM gcp WHERE ST_Within(pt,@buf) ORDER BY grade DESC LIMIT 1) AS s
@@ -103,7 +115,10 @@ EOS;
   #
   # sanmei 更新
   #
-  $dbh->exec('DELETE FROM sanmei WHERE id=@ID');
+  $sql = <<<'EOS'
+DELETE FROM sanmei WHERE id=@ID
+EOS;
+  $dbh->exec($sql);
 
   $ka = explode('・', $kana);
   $na = explode('・', $name);
@@ -112,14 +127,20 @@ EOS;
     #
     # 総称
     #
-    $sth = $dbh->prepare('INSERT INTO sanmei VALUES (@ID,0,?,?)');
+    $sql = <<<'EOS'
+INSERT INTO sanmei VALUES (@ID,0,?,?)
+EOS;
+    $sth = $dbh->prepare($sql);
     $sth->execute(array($ka[0], $na[0]));
     $sth = null;
     $kana = $ka[1];
     $name = $na[1];
   }
 
-  $sth = $dbh->prepare('INSERT INTO sanmei VALUES (@ID,1,?,?)');
+  $sql = <<<'EOS'
+INSERT INTO sanmei VALUES (@ID,1,?,?)
+EOS;
+  $sth = $dbh->prepare($sql);
   $sth->execute(array($kana, $name));
   $sth = null;
 
@@ -130,7 +151,10 @@ EOS;
     $kana = filter_input(INPUT_POST, "kana$i");
     $name = filter_input(INPUT_POST, "name$i");
     if ($kana && $name) {
-      $sth = $dbh->prepare('INSERT INTO sanmei VALUES (@ID,2,?,?)');
+      $sql = <<<'EOS'
+INSERT INTO sanmei VALUES (@ID,2,?,?)
+EOS;
+      $sth = $dbh->prepare($sql);
       $sth->execute(array($kana, $name));
       $sth = null;
     }
@@ -139,10 +163,16 @@ EOS;
   #
   # location 更新
   #
-  $dbh->exec('DELETE FROM location WHERE id=@ID');
+  $sql = <<<'EOS'
+DELETE FROM location WHERE id=@ID
+EOS;
+  $dbh->exec($sql);
 
   # NOTE: 基準点による調整で位置座標が変わった可能性がある
-  $dbh->exec('SELECT ST_Buffer(pt,@EPS) INTO @buf FROM geom WHERE id=@ID');
+  $sql = <<<'EOS'
+SELECT ST_Buffer(pt,@EPS) INTO @buf FROM geom WHERE id=@ID
+EOS;
+  $dbh->exec($sql);
 
   $sql = <<<'EOS'
 INSERT INTO location
@@ -154,7 +184,10 @@ EOS;
   #
   # 更新された山名情報を返す
   #
-  $sth = $dbh->prepare('SELECT id,kana,name,alt,lat,lon,auth,gcpname FROM geom WHERE id=@ID');
+  $sql = <<<'EOS'
+SELECT id,kana,name,alt,lat,lon,auth,gcpname FROM geom WHERE id=@ID
+EOS;
+  $sth = $dbh->prepare($sql);
   $sth->execute();
   $geo = $sth->fetchAll(PDO::FETCH_ASSOC);
   $sth = null;
@@ -162,7 +195,10 @@ EOS;
   #
   # 別名
   #
-  $sth = $dbh->prepare('SELECT kana,name FROM sanmei WHERE id=@ID AND type>1');
+  $sql = <<<'EOS'
+SELECT kana,name FROM sanmei WHERE id=@ID AND type>1
+EOS;
+  $sth = $dbh->prepare($sql);
   $sth->execute();
   $geo[0]['alias'] = $sth->fetchAll(PDO::FETCH_ASSOC);
   $sth = null;
@@ -182,19 +218,31 @@ if (isset($cat)) {
   # GeoJSON出力
   #
   $v = filter_input(INPUT_GET, 'v', FILTER_VALIDATE_INT);
-  $sql = null;
-  if ($cat == 0) {
-    if ($v == 0) {
-      #
-      # 全国
-      #
+
+  switch ($v) {
+  case 0:
+    #
+    # 全国
+    #
+    if ($cat == 0) {
       $sql = <<<'EOS'
 SELECT id,name,lat,lon,1 AS c,level AS p FROM geom
 EOS;
-    } else if ($v == 1) {
-      #
-      # 山行記録のある山を抽出
-      #
+    } else {
+      $sql = <<<'EOS'
+SELECT id,m.name,lat,lon,1 AS c,level AS p FROM geom
+JOIN (
+ SELECT id,name FROM meizan
+ WHERE cat=?
+) AS m USING (id)
+EOS;
+    }
+    break;
+  case 1:
+    #
+    # 山行記録のある山
+    #
+    if ($cat == 0) {
       $sql = <<<'EOS'
 SELECT id,name,lat,lon,1 AS c,level AS p FROM geom
 JOIN (
@@ -203,10 +251,26 @@ JOIN (
  WHERE link IS NOT NULL
 ) AS e USING (id)
 EOS;
-    } else if ($v == 2) {
-      #
-      # 山+山行記録数を抽出
-      #
+    } else {
+      $sql = <<<'EOS'
+SELECT id,m.name,lat,lon,1 AS c,level AS p FROM geom
+JOIN (
+ SELECT id,name FROM meizan
+ WHERE cat=?
+) AS m USING (id)
+JOIN (
+ SELECT DISTINCT id FROM explored
+ JOIN record USING (rec)
+ WHERE link IS NOT NULL
+) AS e USING (id)
+EOS;
+    }
+    break;
+  case 2:
+    #
+    # 山+山行記録数
+    #
+    if ($cat == 0) {
       $sql = <<<'EOS'
 SELECT id,name,lat,lon,COUNT(rec) AS c,level AS p FROM geom
 LEFT JOIN (
@@ -216,39 +280,7 @@ LEFT JOIN (
 ) AS e USING (id)
 GROUP BY id
 EOS;
-    }
-  } else {
-    if ($v == 0) {
-      #
-      # 名山カテゴリを指定して抽出
-      #
-      $sql = <<<'EOS'
-SELECT id,m.name,lat,lon,1 AS c,level AS p FROM geom
-JOIN (
- SELECT id,name FROM meizan
- WHERE cat=?
-) AS m USING (id)
-EOS;
-    } else if ($v == 1) {
-      #
-      # 名山カテゴリを指定して山行記録のある山を抽出
-      #
-      $sql = <<<'EOS'
-SELECT id,m.name,lat,lon,1 AS c,level AS p FROM geom
-JOIN (
- SELECT id,name FROM meizan
- WHERE cat=?
-) AS m USING (id)
-JOIN (
- SELECT DISTINCT id FROM explored
- JOIN record USING (rec)
- WHERE link IS NOT NULL
-) AS e USING (id)
-EOS;
-    } else if ($v == 2) {
-      #
-      # 名山カテゴリを指定して山＋山行記録数を抽出
-      #
+    } else {
       $sql = <<<'EOS'
 SELECT id,m.name,lat,lon,COUNT(rec) AS c,level AS p FROM geom
 JOIN (
@@ -263,18 +295,19 @@ LEFT JOIN (
 GROUP BY id
 EOS;
     }
-  }
-  if (!isset($sql)) {
-    http_response_code(400); # Bad Request
+    break;
+  default:
     $dbh = null;
+    http_response_code(400); # Bad Request
     exit;
   }
+
   $sth = $dbh->prepare($sql);
   if ($cat > 0) {
-    # 名山カテゴリ
     $sth->bindValue(1, $cat, PDO::PARAM_INT);
   }
   $sth->execute();
+
   header('Content-Type: application/geo+json; charset=UTF-8');
   header('Cache-Control: no-store, max-age=0');
   echo '{"type":"FeatureCollection","features":[', PHP_EOL;
@@ -385,34 +418,22 @@ $n = filter_input(INPUT_GET, 'n', FILTER_VALIDATE_INT);
 
 if ($mode == 'id' && $n) {
   switch ($n) {
-  case 1:
-    #
-    # 次のID
-    #
+  case 1: # 次のID
     $sql = <<<'EOS'
 SELECT id FROM geom WHERE id>? ORDER BY id LIMIT 1
 EOS;
     break;
-  case 2:
-    #
-    # 次のID（三角点、標高点以外）
-    #
+  case 2: # 次のID（三角点、標高点以外）
     $sql = <<<'EOS'
 SELECT id FROM geom WHERE id>? AND level&7<2 ORDER BY id LIMIT 1
 EOS;
     break;
-  case -1:
-    #
-    # 前のID
-    #
+  case -1: # 前のID
     $sql = <<<'EOS'
 SELECT id FROM geom WHERE id<? ORDER BY id DESC LIMIT 1
 EOS;
     break;
-  case -2:
-    #
-    # 前のID（三角点、標高点以外）
-    #
+  case -2: # 前のID（三角点、標高点以外）
     $sql = <<<'EOS'
 SELECT id FROM geom WHERE id<? AND level&7<2 ORDER BY id DESC LIMIT 1
 EOS;
