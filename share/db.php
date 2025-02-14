@@ -1,9 +1,7 @@
 <?php
 session_start();
-# NOTE: if posix functions are not available, set $home manually
-$uid = posix_getuid(); # user id
-$home = posix_getpwuid($uid)['dir']; # home directory
-$cf = parse_ini_file($home . '/.my.cnf'); # 🔖 設定ファイル
+$home = getenv('HOME') ?: '/home/anineco'; # user's home directory
+$cf = parse_ini_file($home . '/.my.cnf'); # MySQL configuration
 $dsn = "mysql:dbname=$cf[database];host=$cf[host];charset=utf8mb4";
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
   $dsn .= ';readOnly=1';
@@ -11,10 +9,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 
 # 🔖 位置の許容誤差
-# MySQL8: 40[m]
-# MySQL5: 0.00036[°] = 1.3[″]
 $sql = <<<'EOS'
-SET @EPS=IF(0/*!80003 +1 */,40,0.00036)
+SET @EPS=40 -- [m]
 EOS;
 $dbh->exec($sql);
 
@@ -65,7 +61,7 @@ EOS;
 
     $sql = <<<'EOS'
 UPDATE geom
-SET alt=?,pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */),name=?,kana=?,level=0,auth=?
+SET alt=?,pt=ST_GeomFromText(?,4326,'axis-order=long-lat'),name=?,kana=?,level=0,auth=?
 WHERE id=@ID
 EOS;
   } else {
@@ -74,7 +70,7 @@ EOS;
     #
     $sql = <<<'EOS'
 INSERT INTO geom (alt,pt,name,kana,level,auth) VALUES
-(?,ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */),?,?,0,?)
+(?,ST_GeomFromText(?,4326,'axis-order=long-lat'),?,?,0,?)
 EOS;
   }
   $sth = $dbh->prepare($sql);
@@ -110,7 +106,7 @@ EOS;
 
   $sql = <<<'EOS'
 UPDATE geom,(SELECT * FROM gcp WHERE ST_Within(pt,@buf) ORDER BY alt DESC LIMIT 1) AS s
-SET geom.pt=s.pt,geom.alt=s.alt,geom.level=geom.level+s.grade,geom.gcpname=s.name
+SET geom.pt=s.pt,geom.alt=s.alt,geom.level=geom.level+s.grade,geom.fid=s.fid
 WHERE id=@ID AND s.grade IS NOT NULL
 EOS;
   $dbh->exec($sql);
@@ -188,7 +184,9 @@ EOS;
   # 更新された山名情報を返す
   #
   $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon,auth,gcpname FROM geom WHERE id=@ID
+SELECT id,kana,geom.name,geom.alt,lat,lon,auth,gcp.name AS gcpname FROM geom
+LEFT JOIN gcp USING (fid)
+WHERE id=@ID
 EOS;
   $sth = $dbh->prepare($sql);
   $sth->execute();
@@ -354,7 +352,7 @@ if (isset($rgc) || isset($zu) || isset($mt)) {
     exit;
   }
   $sql = <<<'EOS'
-SET @g=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */)
+SET @g=ST_GeomFromText(?,4326,'axis-order=long-lat')
 EOS;
   $sth = $dbh->prepare($sql);
   $sth->bindValue(1, "POINT($lon $lat)");
@@ -462,7 +460,8 @@ if ($mode == 'rec' && $c > 0) {
   # 名山カテゴリを指定してREC検索
   #
   $sql = <<<'EOS'
-SELECT id,m.kana,m.name,alt,lat,lon,level,auth,gcpname FROM geom
+SELECT id,m.kana,m.name,geom.alt,lat,lon,level,auth,gcp.name AS gcpname FROM geom
+LEFT JOIN gcp USING (fid)
 JOIN (
  SELECT id,kana,name FROM meizan
  WHERE cat=?
@@ -478,7 +477,8 @@ EOS;
     # ID/REC検索
     #
     $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon,level,auth,gcpname FROM geom
+SELECT id,kana,geom.name,geom.alt,lat,lon,level,auth,gcp.name AS gcpname FROM geom
+LEFT JOIN gcp USING (fid)
 WHERE id=?
 EOS;
     $sth = $dbh->prepare($sql);
@@ -488,7 +488,8 @@ EOS;
     # 最新の登録
     #
     $sql = <<<'EOS'
-SELECT id,kana,name,alt,lat,lon,level,auth,gcpname FROM geom
+SELECT id,kana,geom.name,geom.alt,lat,lon,level,auth,gcp.name AS gcpname FROM geom
+LEFT JOIN gcp USING (fid)
 ORDER BY id DESC
 LIMIT 100
 EOS;
@@ -501,20 +502,16 @@ EOS;
     $val = $m[0];
     $loc = $m[1] . '%'; # 前方一致検索
   }
-  if (substr($val, 0, 1) == '%' || substr($val, -1, 1) == '%') {
-    $eq = ' LIKE ';
-  } else {
-    $eq = '=';
-  }
   if ($loc) {
     #
     # 山名＋所在地検索
     #
     $sql = <<<EOS
-SELECT DISTINCT id,kana,name,alt,lat,lon,level,auth,gcpname FROM geom
+SELECT DISTINCT id,kana,geom.name,geom.alt,lat,lon,level,auth,gcp.name AS gcpname FROM geom
+LEFT JOIN gcp USING (fid)
 JOIN (
  SELECT id FROM sanmei
- WHERE name$eq?
+ WHERE name LIKE ?
 ) AS m USING(id)
 JOIN (
  SELECT id FROM location
@@ -532,10 +529,11 @@ EOS;
     # 山名検索
     #
     $sql = <<<EOS
-SELECT DISTINCT id,kana,name,alt,lat,lon,level,auth,gcpname FROM geom
+SELECT DISTINCT id,kana,geom.name,geom.alt,lat,lon,level,auth,gcp.name AS gcpname FROM geom
+LEFT JOIN gcp USING (fid)
 JOIN (
  SELECT id FROM sanmei
- WHERE name$eq?
+ WHERE name LIKE ?
 ) AS m USING(id)
 ORDER BY alt DESC
 LIMIT 1000
