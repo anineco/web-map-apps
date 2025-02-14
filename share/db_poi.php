@@ -1,8 +1,6 @@
 <?php
-$uid = posix_getuid(); # user id
-$home = posix_getpwuid($uid)['dir']; # home directory
-# NOTE: if posix functions are disabled, set $home manually
-$cf = parse_ini_file($home . '/.my.cnf');
+$home = getenv('HOME') ?: '/home/anineco'; # user's home directory
+$cf = parse_ini_file($home . '/.my.cnf'); # MySQL configuration
 $dsn = "mysql:host=$cf[host];dbname=$cf[database];charset=utf8mb4";
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 
