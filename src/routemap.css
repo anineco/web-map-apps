@@ -18,7 +18,7 @@ body {
 label,
 button {
   font-family: sans-serif;
-  text-wrap: nowrap;
+  white-space: nowrap;
 }
 input:read-only {
   color: gray;
