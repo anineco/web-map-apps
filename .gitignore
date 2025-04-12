@@ -109,3 +109,4 @@ dist
 # added by anineco
 .parcel-cache/
 *.cnf
+.DS_Store
