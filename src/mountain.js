@@ -165,6 +165,8 @@ toolbar.setToggleButton('tb_menu2', menu2);
 
 toolbar.setPopup(popup);
 toolbar.setCenterButton('tb_center');
+toolbar.setGSIMapButton('tb_gsimap');
+toolbar.setYamapButton('tb_yamap');
 toolbar.setBaseSelect('tb_base');
 toolbar.setZoomSelect('tb_zoom', (zoom) => {
   view.setZoom(zoom);

@@ -83,6 +83,24 @@ export default class Toolbar extends Control {
     this.popup.hide();
   }
 
+  // 地理院地図を開く
+  openGSIMap(coordinate, zoom) {
+    const lon_lat = toLonLat(coordinate);
+    const lon = lon_lat[0].toFixed(6);
+    const lat = lon_lat[1].toFixed(6);
+    const url = `https://maps.gsi.go.jp/vector/#${zoom}/${lat}/${lon}/&ls=vstd%7Cexperimental_nnfpt%7Cexperimental_nrpt&disp=111&d=l`;
+    window.open(url, '_blank');
+  }
+
+  // YAMAPの「地図から探す」を開く
+  openYamap(coordinate, zoom) {
+    const lon_lat = toLonLat(coordinate);
+    const lon = lon_lat[0].toFixed(6);
+    const lat = lon_lat[1].toFixed(6);
+    const url = `https://yamap.com/search/activities/landmarks#${zoom}/${lat}/${lon}`;
+    window.open(url, '_blank');
+  }
+
   setToggleButton(id, target) {
     const element = document.getElementById(id);
     element.addEventListener('click', _event => {
@@ -94,6 +112,26 @@ export default class Toolbar extends Control {
     const element = document.getElementById(id);
     element.addEventListener('click', _event => {
       this.openPopup(this.map.getView().getCenter());
+    }, passive);
+  }
+
+  setGSIMapButton(id) {
+    const element = document.getElementById(id);
+    element.addEventListener('click', _event => {
+      const view = this.map.getView();
+      const center = view.getCenter();
+      const zoom = view.getZoom() - 1;
+      this.openGSIMap(center, zoom);
+    }, passive);
+  }
+
+  setYamapButton(id) {
+    const element = document.getElementById(id);
+    element.addEventListener('click', _event => {
+      const view = this.map.getView();
+      const center = view.getCenter();
+      const zoom = view.getZoom() - 1;
+      this.openYamap(center, zoom);
     }, passive);
   }
 
