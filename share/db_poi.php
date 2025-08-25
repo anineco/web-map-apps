@@ -1,5 +1,9 @@
 <?php
-$home = getenv('HOME') ?: '/home/anineco'; # user's home directory
+if ($_SERVER['HTTP_SEC_FETCH_MODE'] != 'cors') {
+    http_response_code(403); # Forbidden
+    exit;
+}
+$home = '/home/anineco'; # 🔖 user's home directory
 $cf = parse_ini_file($home . '/.my.cnf'); # MySQL configuration
 $dsn = "mysql:host=$cf[host];dbname=$cf[database];charset=utf8mb4";
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
@@ -85,7 +89,7 @@ EOS;
     $lat = filter_input($type, 'lat');
     $wkt = "POINT($lon $lat)";
     $sql = <<<'EOS'
-SET @pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat'*/)
+SET @pt=ST_GeomFromText(?,4326/*!80003 ,'axis-order=long-lat' */)
 EOS;
     $sth = $dbh->prepare($sql);
     $sth->bindValue(1, $wkt, PDO::PARAM_STR);

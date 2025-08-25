@@ -1,6 +1,10 @@
 <?php
+if ($_SERVER['HTTP_SEC_FETCH_MODE'] != 'cors') {
+    http_response_code(403); # Forbidden
+    exit;
+}
 session_start();
-$home = getenv('HOME') ?: '/home/anineco'; # user's home directory
+$home = '/home/anineco'; # 🔖 user's home directory
 $cf = parse_ini_file($home . '/.my.cnf'); # MySQL configuration
 $dsn = "mysql:dbname=$cf[database];host=$cf[host];charset=utf8mb4";
 if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -8,9 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 }
 $dbh = new PDO($dsn, $cf['user'], $cf['password']);
 
-# 🔖 位置の許容誤差
+# 位置の許容誤差（ST_Buffer の半径）
 $sql = <<<'EOS'
-SET @EPS=40 -- [m]
+SET @EPS=IF(0/*!80003 +1 */,40,0.00036) -- [m] or [deg]
 EOS;
 $dbh->exec($sql);
 
@@ -61,7 +65,7 @@ EOS;
 
         $sql = <<<'EOS'
 UPDATE geom
-SET alt=?,pt=ST_GeomFromText(?,4326,'axis-order=long-lat'),name=?,kana=?,level=0,auth=?
+SET alt=?,pt=ST_GeomFromText(?,4326/*!80003, 'axis-order=long-lat' */),name=?,kana=?,level=0,auth=?
 WHERE id=@ID
 EOS;
     } else {
@@ -70,7 +74,7 @@ EOS;
         #
         $sql = <<<'EOS'
 INSERT INTO geom (alt,pt,name,kana,level,auth) VALUES
-(?,ST_GeomFromText(?,4326,'axis-order=long-lat'),?,?,0,?)
+(?,ST_GeomFromText(?,4326/*!80003, 'axis-order=long-lat' */),?,?,0,?)
 EOS;
     }
     $sth = $dbh->prepare($sql);
@@ -352,7 +356,7 @@ if (isset($rgc) || isset($zu) || isset($mt)) {
         exit;
     }
     $sql = <<<'EOS'
-SET @g=ST_GeomFromText(?,4326,'axis-order=long-lat')
+SET @g=ST_GeomFromText(?,4326/*!80003, 'axis-order=long-lat' */)
 EOS;
     $sth = $dbh->prepare($sql);
     $sth->bindValue(1, "POINT($lon $lat)");
@@ -363,9 +367,13 @@ EOS;
         # 都道府県＋市区町村
         #
         $sql = <<<'EOS'
+SET @buf=ST_Buffer(@g,@EPS)
+EOS;
+        $dbh->exec($sql);
+        $sql = <<<'EOS'
 SELECT code,name FROM gyosei
 LEFT JOIN city USING (code)
-WHERE ST_Contains(area,@g)
+WHERE ST_Intersects(area,@buf)
 EOS;
     } elseif (isset($zu)) {
         #
